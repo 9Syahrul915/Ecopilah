@@ -1,0 +1,3878 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ECOECOPILAH — Platform Integrasi Layanan Aplikasi SampaH</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6.5' fill='%2316a34a'/><g fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' transform='translate(3.6,3.6) scale(0.7)'><path d='M7 19H4.815a1.83 1.83 0 0 1-1.57-.881 1.785 1.785 0 0 1-.004-1.784L7.196 9.5'/><path d='M11 19h8.203a1.83 1.83 0 0 0 1.556-.902 1.785 1.785 0 0 0-.014-1.786L16.8 9.5'/><path d='m17 14 3-3-3-3'/><path d='M11 5.5a2.5 2.5 0 1 0-5 0v1'/><path d='m14 19 3 3 3-3'/><path d='M8.5 7.5a2.5 2.5 0 1 0 5 0v-1'/></g></svg>" />
+    <meta
+      name="description"
+      content="Platform gamifikasi pengelolaan sampah untuk warga Banjarmasin. ECOPILAH, setor, dan tukarkan sampahmu menjadi poin bernilai."
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <!-- Google Firebase Cloud SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <style>
+      /* ============================================================
+       DESIGN TOKENS
+    ============================================================ */
+      :root {
+        /* Colors */
+        --green-50: #f0fdf4;
+        --green-100: #dcfce7;
+        --green-200: #bbf7d0;
+        --green-500: #22c55e;
+        --green-600: #16a34a;
+        --green-700: #15803d;
+        --green-800: #166534;
+
+        --blue-50: #eff6ff;
+        --blue-500: #3b82f6;
+        --blue-600: #2563eb;
+
+        --amber-50: #fffbeb;
+        --amber-500: #f59e0b;
+        --amber-600: #d97706;
+
+        --red-50: #fef2f2;
+        --red-500: #ef4444;
+
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-400: #9ca3af;
+        --gray-500: #6b7280;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+
+        --white: #ffffff;
+
+        /* Semantic */
+        --primary: var(--green-600);
+        --primary-hover: var(--green-700);
+        --primary-light: var(--green-50);
+        --primary-mid: var(--green-100);
+
+        --bg: var(--gray-50);
+        --surface: var(--white);
+        --border: var(--gray-200);
+        --border-focus: var(--green-500);
+
+        --text-primary: var(--gray-900);
+        --text-secondary: var(--gray-600);
+        --text-muted: var(--gray-400);
+
+        --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+        --shadow-sm:
+          0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+        --shadow-md:
+          0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+        --shadow-lg:
+          0 10px 15px -3px rgba(0, 0, 0, 0.07),
+          0 4px 6px -4px rgba(0, 0, 0, 0.04);
+
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+        --radius-xl: 20px;
+        --radius-full: 9999px;
+
+        --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      /* ============================================================
+       RESET & BASE
+    ============================================================ */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: var(--bg);
+        color: var(--text-primary);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        font-weight: 700;
+        line-height: 1.2;
+        color: var(--text-primary);
+      }
+      p {
+        color: var(--text-secondary);
+        line-height: 1.65;
+      }
+      button {
+        cursor: pointer;
+        font-family: inherit;
+      }
+
+      /* Lucide icon sizing helper */
+      [data-lucide] {
+        display: inline-block;
+        vertical-align: middle;
+        flex-shrink: 0;
+      }
+
+      /* ============================================================
+       CARD
+    ============================================================ */
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+      }
+
+      /* ============================================================
+       BUTTONS
+    ============================================================ */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 20px;
+        border-radius: var(--radius-sm);
+        font-size: 0.9rem;
+        font-weight: 600;
+        border: none;
+        transition: all var(--transition);
+        white-space: nowrap;
+      }
+
+      .btn-primary {
+        background: var(--primary);
+        color: var(--white);
+      }
+      .btn-primary:hover {
+        background: var(--primary-hover);
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+        transform: translateY(-1px);
+      }
+
+      .btn-outline {
+        background: var(--white);
+        color: var(--primary);
+        border: 1.5px solid var(--primary);
+      }
+      .btn-outline:hover {
+        background: var(--primary-light);
+      }
+
+      .btn-ghost {
+        background: transparent;
+        color: var(--text-secondary);
+        border: 1.5px solid var(--border);
+      }
+      .btn-ghost:hover {
+        background: var(--gray-100);
+        color: var(--text-primary);
+      }
+
+      .btn-lg {
+        padding: 13px 28px;
+        font-size: 1rem;
+        border-radius: var(--radius-md);
+      }
+      .btn-block {
+        width: 100%;
+      }
+
+      /* ============================================================
+       FORM
+    ============================================================ */
+      .form-group {
+        margin-bottom: 1.25rem;
+      }
+      .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 6px;
+      }
+      .form-control {
+        width: 100%;
+        padding: 10px 14px;
+        background: var(--white);
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        font-family: inherit;
+        transition:
+          border-color var(--transition),
+          box-shadow var(--transition);
+      }
+      .form-control::placeholder {
+        color: var(--text-muted);
+      }
+      .form-control:focus {
+        outline: none;
+        border-color: var(--border-focus);
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+      }
+
+      /* ============================================================
+       NAVBAR
+    ============================================================ */
+      nav {
+        position: sticky;
+        top: 0;
+        z-index: 200;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border);
+        padding: 0 5%;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: var(--primary);
+        cursor: pointer;
+        letter-spacing: -0.02em;
+        text-decoration: none;
+      }
+      .logo-icon {
+        width: 34px;
+        height: 34px;
+        background: var(--primary);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .nav-btn {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        font-weight: 500;
+        padding: 6px 12px;
+        border-radius: var(--radius-sm);
+        transition: all var(--transition);
+      }
+      .nav-btn:hover {
+        background: var(--gray-100);
+        color: var(--text-primary);
+      }
+
+      /* ============================================================
+       LAYOUT & VIEW SYSTEM
+    ============================================================ */
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 2.5rem 5%;
+        flex: 1;
+      }
+
+      .view {
+        display: none;
+        animation: fadeUp 0.35s ease forwards;
+      }
+      .view.active {
+        display: block;
+      }
+
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* ============================================================
+       LANDING — HERO
+    ============================================================ */
+      .hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 3rem;
+        min-height: calc(100vh - 64px - 5rem);
+        padding-top: 1rem;
+      }
+
+      .hero-content {
+        flex: 1;
+        max-width: 620px;
+      }
+
+      .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--green-100);
+        color: var(--green-700);
+        font-size: 0.78rem;
+        font-weight: 600;
+        padding: 5px 12px;
+        border-radius: var(--radius-full);
+        margin-bottom: 1.5rem;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+
+      .hero h1 {
+        font-size: clamp(2.1rem, 4.2vw, 3.2rem);
+        line-height: 1.18;
+        letter-spacing: -0.03em;
+        margin-bottom: 1.25rem;
+        color: var(--gray-900);
+      }
+      .hero h1 .accent {
+        color: var(--primary);
+      }
+
+      .hero > .hero-content > p {
+        font-size: 1.1rem;
+        line-height: 1.7;
+        color: var(--text-secondary);
+        margin-bottom: 2rem;
+      }
+
+      .hero-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .hero-visual {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .hero-graphic {
+        width: 420px;
+        max-width: 100%;
+        aspect-ratio: 1;
+        background: var(--green-50);
+        border-radius: 40px;
+        border: 1px solid var(--green-200);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        position: relative;
+        overflow: hidden;
+      }
+      .hero-graphic::before {
+        content: "";
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(
+          circle,
+          var(--green-200) 0%,
+          transparent 70%
+        );
+        border-radius: 50%;
+        top: -60px;
+        right: -60px;
+        opacity: 0.6;
+      }
+      .hero-graphic-icon {
+        position: relative;
+        width: 96px;
+        height: 96px;
+        background: var(--primary);
+        border-radius: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        box-shadow: 0 8px 24px rgba(22, 163, 74, 0.35);
+      }
+      .hero-graphic-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--green-800);
+        letter-spacing: -0.02em;
+      }
+      .hero-graphic-sub {
+        font-size: 0.85rem;
+        color: var(--green-700);
+        font-weight: 500;
+      }
+
+      /* Floating badges */
+      .float-badge {
+        position: absolute;
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 10px 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        font-size: 0.82rem;
+        box-shadow: var(--shadow-md);
+        color: var(--text-primary);
+        animation: float 3s ease-in-out infinite;
+      }
+      .float-badge:nth-child(3) {
+        bottom: 40px;
+        left: 20px;
+        animation-delay: 0.5s;
+      }
+      .float-badge:nth-child(4) {
+        top: 40px;
+        right: 20px;
+        animation-delay: 1s;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-8px);
+        }
+      }
+
+      /* ============================================================
+       LANDING — STATS
+    ============================================================ */
+      .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin: 4rem 0 2rem;
+      }
+
+      .stat-item {
+        padding: 1.75rem 1.5rem;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .stat-icon-wrap {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-md);
+        background: var(--green-50);
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 0.75rem;
+      }
+      .stat-item h3 {
+        font-size: 2.25rem;
+        color: var(--primary);
+        letter-spacing: -0.03em;
+        margin-bottom: 4px;
+      }
+      .stat-item p {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin: 0;
+      }
+
+      /* ============================================================
+       FLIP CARD — SAMPAH TERKUMPUL
+    ============================================================ */
+      .flip-section {
+        display: flex;
+        justify-content: center;
+        margin: 0 0 4rem;
+      }
+
+      .flip-wrapper {
+        perspective: 1200px;
+        width: 480px;
+        height: 290px;
+      }
+
+      .flip-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transform-style: preserve-3d;
+        transition: transform 0.75s cubic-bezier(0.4, 0.2, 0.2, 1);
+      }
+
+      .flip-wrapper.is-flipped .flip-inner {
+        transform: rotateY(180deg);
+      }
+
+      .flip-front,
+      .flip-back {
+        position: absolute;
+        inset: 0;
+        border-radius: var(--radius-xl);
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .flip-front {
+        background: var(--white);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-md);
+        gap: 0.4rem;
+        padding: 2rem;
+        text-align: center;
+      }
+
+      .flip-front-icon {
+        width: 56px;
+        height: 56px;
+        background: var(--green-50);
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+        animation: gentle-bob 2.8s ease-in-out infinite;
+      }
+
+      @keyframes gentle-bob {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-6px);
+        }
+      }
+
+      .flip-front h3 {
+        font-size: 2.25rem;
+        letter-spacing: -0.03em;
+        color: var(--primary);
+      }
+      .flip-front p {
+        font-size: 0.875rem;
+        margin: 0;
+      }
+
+      .flip-hint {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      /* Back */
+      .flip-back {
+        background: var(--white);
+        border: 1.5px solid var(--green-200);
+        box-shadow: 0 8px 24px rgba(22, 163, 74, 0.1);
+        transform: rotateY(180deg);
+        padding: 1.75rem 2rem;
+        align-items: stretch;
+        justify-content: flex-start;
+        gap: 0;
+      }
+
+      .flip-back-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--primary);
+        margin-bottom: 1rem;
+      }
+
+      .waste-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.55rem 0;
+        border-bottom: 1px solid var(--gray-100);
+      }
+      .waste-row:last-of-type {
+        border-bottom: none;
+      }
+
+      .waste-row-left {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+      }
+
+      .waste-row-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .waste-row-icon.organik {
+        background: #dcfce7;
+        color: #16a34a;
+      }
+      .waste-row-icon.anorganik {
+        background: #dbeafe;
+        color: #2563eb;
+      }
+      .waste-row-icon.b3 {
+        background: #fef3c7;
+        color: #d97706;
+      }
+
+      .waste-amount {
+        font-size: 0.92rem;
+        font-weight: 700;
+      }
+      .waste-amount.organik {
+        color: #16a34a;
+      }
+      .waste-amount.anorganik {
+        color: #2563eb;
+      }
+      .waste-amount.b3 {
+        color: #d97706;
+      }
+
+      .waste-total-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 0.65rem;
+        padding-top: 0.6rem;
+        border-top: 1.5px solid var(--green-200);
+      }
+      .waste-total-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+      .waste-total-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--primary);
+      }
+
+      /* ============================================================
+       LANDING — HOW IT WORKS
+    ============================================================ */
+      .section-header {
+        text-align: center;
+        margin-bottom: 3rem;
+      }
+      .section-label {
+        display: inline-block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--primary);
+        margin-bottom: 0.75rem;
+      }
+      .section-header h2 {
+        font-size: 2rem;
+        letter-spacing: -0.02em;
+      }
+      .section-header p {
+        max-width: 500px;
+        margin: 0.75rem auto 0;
+      }
+
+      .steps-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 5rem;
+      }
+      @media (max-width: 992px) {
+        .steps-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (max-width: 576px) {
+        .steps-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .step-card {
+        padding: 2rem 1.5rem;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition:
+          transform var(--transition),
+          box-shadow var(--transition);
+        position: relative;
+      }
+      .step-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+      }
+
+      .step-num {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--primary);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-bottom: 0.75rem;
+      }
+      .step-icon-wrap {
+        width: 52px;
+        height: 52px;
+        border-radius: var(--radius-md);
+        background: var(--green-50);
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.25rem;
+      }
+      .step-card h4 {
+        font-size: 1.05rem;
+        margin-bottom: 0.5rem;
+      }
+      .step-card p {
+        font-size: 0.875rem;
+        margin: 0;
+        color: var(--text-secondary);
+        line-height: 1.5;
+      }
+
+      /* ============================================================
+       MODAL
+    ============================================================ */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(17, 24, 39, 0.45);
+        backdrop-filter: blur(4px);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 500;
+        padding: 1rem;
+      }
+      .modal-overlay.active {
+        display: flex;
+      }
+
+      .modal-card {
+        width: 100%;
+        max-width: 420px;
+        padding: 2.5rem;
+        position: relative;
+        animation: modalIn 0.25s ease forwards;
+      }
+      @keyframes modalIn {
+        from {
+          opacity: 0;
+          transform: scale(0.96) translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+
+      .modal-close {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-sm);
+        background: none;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-muted);
+        transition: all var(--transition);
+      }
+      .modal-close:hover {
+        background: var(--gray-100);
+        color: var(--text-primary);
+      }
+
+      .modal-card h2 {
+        font-size: 1.4rem;
+        letter-spacing: -0.02em;
+      }
+      .modal-card > p {
+        font-size: 0.875rem;
+        margin: 0.5rem 0 1.75rem;
+      }
+
+      .auth-toggle {
+        text-align: center;
+        margin-top: 1.5rem;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+      }
+      .auth-toggle a {
+        color: var(--primary);
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+      }
+      .auth-toggle a:hover {
+        text-decoration: underline;
+      }
+
+      /* ============================================================
+       DASHBOARD
+    ============================================================ */
+      .dash-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+
+      .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .avatar {
+        width: 52px;
+        height: 52px;
+        border-radius: var(--radius-full);
+        background: var(--primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+
+      .user-profile h2 {
+        font-size: 1.15rem;
+        margin: 0;
+      }
+      .user-profile p {
+        font-size: 0.82rem;
+        margin: 2px 0 0;
+        color: var(--text-muted);
+      }
+
+      .badge-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: var(--radius-full);
+        font-size: 0.8rem;
+        font-weight: 600;
+        background: var(--gray-100);
+        color: var(--text-secondary);
+        border: 1px solid var(--border);
+      }
+      .badge-pill.emas {
+        background: #fefce8;
+        color: #92400e;
+        border-color: #fde68a;
+      }
+      .badge-pill.perak {
+        background: #f8fafc;
+        color: #475569;
+        border-color: #cbd5e1;
+      }
+      .badge-pill.hijau {
+        background: var(--green-50);
+        color: var(--green-700);
+        border-color: var(--green-200);
+      }
+
+      /* Dashboard grid */
+      .dash-grid {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .points-card {
+        padding: 2.5rem 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 0.5rem;
+        background: linear-gradient(135deg, var(--green-600), var(--green-700));
+        border: none;
+        color: white;
+      }
+      .points-card h3 {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.85rem;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        margin: 0;
+      }
+      .points-value {
+        font-size: 4rem;
+        font-weight: 800;
+        color: white;
+        letter-spacing: -0.04em;
+        line-height: 1;
+      }
+      .points-card > p {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.85rem;
+        margin: 0.25rem 0 0;
+      }
+
+      .quick-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .action-card {
+        padding: 1.1rem 1.4rem;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        cursor: pointer;
+        transition: all var(--transition);
+      }
+      .action-card:hover {
+        border-color: var(--border-focus);
+        box-shadow: var(--shadow-md);
+        transform: translateX(3px);
+      }
+      .action-icon-wrap {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-md);
+        background: var(--primary-light);
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .action-card h4 {
+        font-size: 0.95rem;
+        margin: 0 0 2px;
+      }
+      .action-card p {
+        font-size: 0.8rem;
+        margin: 0;
+      }
+
+      /* Activity */
+      .section-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+      }
+
+      .activity-list {
+        padding: 0 1.5rem;
+      }
+      .activity-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.9rem 0;
+        border-bottom: 1px solid var(--gray-100);
+        gap: 1rem;
+      }
+      .activity-item:last-child {
+        border-bottom: none;
+      }
+      .activity-desc {
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 2px;
+      }
+      .activity-date {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+      }
+      .activity-pts {
+        font-size: 0.9rem;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .activity-pts.positive {
+        color: var(--primary);
+      }
+      .activity-pts.negative {
+        color: var(--red-500);
+      }
+
+      /* ============================================================
+       SETOR PAGE
+    ============================================================ */
+      .page-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        background: none;
+        border: none;
+        padding: 6px 0;
+        margin-bottom: 1.75rem;
+        transition: color var(--transition);
+      }
+      .page-back:hover {
+        color: var(--primary);
+      }
+
+      .page-title {
+        font-size: 1.75rem;
+        letter-spacing: -0.025em;
+        margin-bottom: 0.5rem;
+      }
+      .page-subtitle {
+        font-size: 0.9rem;
+        margin-bottom: 2rem;
+      }
+
+      .waste-types {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+      }
+
+      .waste-card {
+        padding: 1.75rem 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all var(--transition);
+        border: 2px solid var(--border);
+      }
+      .waste-card:hover {
+        border-color: var(--border-focus);
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+      }
+      .waste-card.selected {
+        border-color: var(--primary);
+        background: var(--green-50);
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+      }
+
+      .waste-card-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.1rem;
+      }
+      .waste-card-icon.organik {
+        background: #dcfce7;
+        color: #16a34a;
+      }
+      .waste-card-icon.anorganik {
+        background: #dbeafe;
+        color: #2563eb;
+      }
+      .waste-card-icon.b3 {
+        background: #fef3c7;
+        color: #d97706;
+      }
+      .waste-card-icon.Jelantah {
+        background: #fff7ed;
+        color: #c2410c;
+      }
+
+      .waste-card h4 {
+        font-size: 1rem;
+        margin-bottom: 0.35rem;
+      }
+      .waste-rate {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--primary);
+        margin-bottom: 0.25rem;
+      }
+      .waste-card p {
+        font-size: 0.78rem;
+        margin: 0;
+      }
+
+      /* Weight input */
+      .weight-section {
+        padding: 2rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
+      }
+      .weight-section h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 1.25rem;
+      }
+
+      .weight-input {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .weight-input-field {
+        font-size: 3rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        letter-spacing: -0.03em;
+        width: 160px;
+        text-align: center;
+        border: none;
+        border-bottom: 2.5px solid var(--border);
+        border-radius: 0;
+        background: transparent;
+        outline: none;
+        padding: 0 0 4px;
+        font-family: inherit;
+        transition: border-color var(--transition);
+      }
+      .weight-input-field:focus {
+        border-color: var(--primary);
+      }
+      .weight-input-field::-webkit-inner-spin-button,
+      .weight-input-field::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+      }
+      .weight-input-field[type="number"] {
+        -moz-appearance: textfield;
+      }
+
+      .weight-unit {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        margin-top: 4px;
+      }
+
+      .calc-display {
+        background: var(--green-50);
+        border: 1px solid var(--green-200);
+        border-radius: var(--radius-md);
+        padding: 1rem 1.5rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 1rem;
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+      }
+      .calc-display strong {
+        font-size: 1.5rem;
+        color: var(--primary);
+        font-weight: 800;
+      }
+
+      /* ============================================================
+       LEADERBOARD
+    ============================================================ */
+      .lb-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .lb-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.5rem;
+        transition: all var(--transition);
+      }
+      .lb-item:hover {
+        transform: translateX(3px);
+        box-shadow: var(--shadow-md);
+      }
+      .lb-item.current-user {
+        border-color: var(--primary);
+        background: var(--green-50);
+      }
+
+      .rank-badge {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 0.95rem;
+        flex-shrink: 0;
+      }
+      .rank-badge.r1 {
+        background: #fef9c3;
+        color: #a16207;
+      }
+      .rank-badge.r2 {
+        background: #f1f5f9;
+        color: #475569;
+      }
+      .rank-badge.r3 {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .rank-badge.rn {
+        background: var(--gray-100);
+        color: var(--text-muted);
+        font-size: 0.8rem;
+      }
+
+      .lb-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-full);
+        background: var(--primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.95rem;
+        flex-shrink: 0;
+      }
+
+      .lb-info {
+        flex: 1;
+      }
+      .lb-info h4 {
+        font-size: 0.95rem;
+        margin: 0 0 2px;
+      }
+      .lb-info span {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+      }
+
+      .lb-pts {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--primary);
+        white-space: nowrap;
+      }
+
+      /* ============================================================
+       REWARDS
+    ============================================================ */
+      .tukar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+      .saldo-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: var(--primary-light);
+        border: 1px solid var(--green-200);
+        border-radius: var(--radius-full);
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--green-700);
+      }
+
+      .rewards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 1.25rem;
+      }
+
+      .reward-card {
+        padding: 1.75rem 1.5rem;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        transition: all var(--transition);
+      }
+      .reward-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-lg);
+      }
+
+      .reward-icon-wrap {
+        width: 64px;
+        height: 64px;
+        background: var(--gray-100);
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        color: var(--primary);
+      }
+
+      .reward-card h4 {
+        font-size: 0.95rem;
+        margin: 0;
+      }
+      .reward-cost {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+      }
+
+      /* ============================================================
+       PETUGAS PORTAL & TASK CARDS
+    ============================================================ */
+      .task-card {
+        padding: 1.5rem;
+        border-radius: var(--radius-lg);
+        background: var(--white);
+        border: 1.5px solid var(--border);
+        box-shadow: var(--shadow-sm);
+        transition: all var(--transition);
+      }
+      .task-card:hover {
+        box-shadow: var(--shadow-md);
+        border-color: var(--gray-300);
+      }
+      .task-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+      }
+      .task-resident-name {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+      .task-address {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-top: 4px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .task-details {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        padding: 0.85rem 1rem;
+        background: var(--gray-50);
+        border-radius: var(--radius-md);
+        margin-bottom: 1.25rem;
+        align-items: center;
+      }
+      .task-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      /* ============================================================
+       PICKUP STATUS & STEPPER TRACKING
+    ============================================================ */
+      .pickup-card {
+        padding: 1.5rem;
+        border-radius: var(--radius-lg);
+        background: var(--white);
+        border: 1.5px solid var(--border);
+        box-shadow: var(--shadow-sm);
+      }
+      .pickup-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.25rem;
+      }
+      .pickup-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+      .pickup-sub {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-top: 3px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: var(--radius-full);
+        font-size: 0.78rem;
+        font-weight: 600;
+      }
+      .status-pill.pending { background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; }
+      .status-pill.in_transit { background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
+      .status-pill.completed { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+
+      .pickup-stepper-wrap {
+        position: relative;
+        padding: 0.5rem 0.5rem 0;
+        margin-top: 1rem;
+      }
+      .pickup-stepper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+      }
+      .pickup-stepper-line {
+        position: absolute;
+        top: 18px;
+        left: 36px;
+        right: 36px;
+        height: 3px;
+        background: var(--gray-200);
+        z-index: 1;
+      }
+      .pickup-stepper-progress {
+        position: absolute;
+        top: 18px;
+        left: 36px;
+        height: 3px;
+        background: var(--primary);
+        z-index: 2;
+        transition: width 0.5s ease;
+      }
+      .step-node {
+        position: relative;
+        z-index: 3;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        width: 100px;
+        text-align: center;
+      }
+      .step-circle {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius-full);
+        background: var(--white);
+        border: 2px solid var(--gray-300);
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all var(--transition);
+      }
+      .step-node.active .step-circle {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: white;
+        box-shadow: 0 0 0 4px rgba(34,197,94,.15);
+      }
+      .step-node.current .step-circle {
+        border-color: #2563eb;
+        background: #2563eb;
+        color: white;
+        box-shadow: 0 0 0 4px rgba(37,99,235,.15);
+      }
+      .step-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+      .step-node.active .step-label { color: var(--primary); }
+      .step-node.current .step-label { color: #2563eb; }
+
+      /* ============================================================
+       TOAST
+    ============================================================ */
+      #toast-container {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .toast {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 18px;
+        border-radius: var(--radius-md);
+        background: var(--gray-900);
+        color: white;
+        font-size: 0.875rem;
+        font-weight: 500;
+        box-shadow: var(--shadow-lg);
+        animation: toastIn 0.3s ease forwards;
+        max-width: 320px;
+      }
+      .toast.success .toast-dot {
+        color: var(--green-500);
+      }
+      .toast.error .toast-dot {
+        color: var(--red-500);
+      }
+
+      @keyframes toastIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+      @media (max-width: 900px) {
+        .hero {
+          flex-direction: column;
+          text-align: center;
+          padding-top: 2rem;
+        }
+        .hero-visual {
+          width: 100%;
+        }
+        .hero-graphic {
+          width: 100%;
+          max-width: 340px;
+        }
+        .hero-actions {
+          justify-content: center;
+        }
+        .dash-grid {
+          grid-template-columns: 1fr;
+        }
+        .quick-actions {
+          flex-direction: row;
+          overflow-x: auto;
+        }
+        .action-card {
+          min-width: 180px;
+        }
+      }
+
+      @media (max-width: 600px) {
+        .container {
+          padding: 1.5rem 4%;
+        }
+        .flip-wrapper {
+          width: 100%;
+          max-width: 420px;
+          height: 280px;
+        }
+      }
+      /* ============================================================
+       MARKETPLACE
+    ============================================================ */
+      .marketplace-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .marketplace-filters {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+
+      .filter-btn {
+        padding: 6px 16px;
+        border-radius: var(--radius-full);
+        border: 1px solid var(--border);
+        background: var(--surface);
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all var(--transition);
+      }
+      .filter-btn:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+      }
+      .filter-btn.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+      }
+
+      .marketplace-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .product-card {
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        transition: all var(--transition);
+        display: flex;
+        flex-direction: column;
+      }
+      .product-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+      }
+
+      .product-img {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        background: linear-gradient(135deg, var(--green-50), var(--green-100));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        position: relative;
+      }
+      .product-img .product-icon {
+        width: 64px;
+        height: 64px;
+        opacity: 0.7;
+      }
+      .product-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        padding: 3px 10px;
+        border-radius: var(--radius-full);
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .product-badge.bestseller {
+        background: var(--amber-500);
+        color: white;
+      }
+      .product-badge.new {
+        background: var(--blue-600);
+        color: white;
+      }
+      .product-badge.eco {
+        background: var(--green-600);
+        color: white;
+      }
+
+      .product-info {
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        flex: 1;
+      }
+      .product-category {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--primary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .product-info h4 {
+        font-size: 1rem;
+        margin: 0;
+        color: var(--text-primary);
+      }
+      .product-info .product-desc {
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+        line-height: 1.5;
+        margin: 0;
+      }
+      .product-price-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: auto;
+        padding-top: 0.75rem;
+      }
+      .product-price {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: var(--text-primary);
+      }
+      .product-price span {
+        font-size: 0.78rem;
+        font-weight: 400;
+        color: var(--text-muted);
+      }
+
+      .btn-cart {
+        padding: 8px 16px;
+        border-radius: var(--radius-full);
+        background: var(--primary);
+        color: white;
+        border: none;
+        font-size: 0.78rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .btn-cart:hover {
+        background: var(--primary-hover);
+        transform: scale(1.05);
+      }
+
+      .marketplace-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+      }
+      @media (max-width: 768px) {
+        .marketplace-stats {
+          grid-template-columns: 1fr;
+        }
+      }
+      .mp-stat-card {
+        padding: 1.25rem;
+        text-align: center;
+        border-radius: var(--radius-md);
+        background: var(--surface);
+        border: 1px solid var(--border);
+      }
+      .mp-stat-card .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.5rem;
+      }
+      .mp-stat-card .stat-val {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-primary);
+      }
+      .mp-stat-card .stat-label {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-top: 2px;
+      }
+
+      .product-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 1rem;
+      }
+      .product-modal-overlay.active {
+        display: flex;
+      }
+      .product-modal {
+        background: var(--surface);
+        border-radius: var(--radius-xl);
+        max-width: 480px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: var(--shadow-lg);
+      }
+      .product-modal-img {
+        width: 100%;
+        height: 220px;
+        background: linear-gradient(135deg, var(--green-50), var(--green-100));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      }
+      .product-modal-body {
+        padding: 1.5rem;
+      }
+      .product-modal-body h3 {
+        font-size: 1.3rem;
+        margin: 0 0 0.25rem;
+      }
+      .product-modal-body .pm-cat {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--primary);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .product-modal-body .pm-desc {
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin: 1rem 0;
+      }
+      .product-modal-body .pm-price {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+      }
+      .product-modal-actions {
+        display: flex;
+        gap: 0.75rem;
+      }
+      .product-modal-actions .btn {
+        flex: 1;
+      }
+
+      .cart-badge {
+        position: relative;
+      }
+      .cart-badge .cart-count {
+        position: absolute;
+        top: -6px;
+        right: -8px;
+        background: var(--red-500);
+        color: white;
+        font-size: 0.6rem;
+        font-weight: 700;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      @media (max-width: 600px) {
+        .marketplace-grid {
+          grid-template-columns: 1fr 1fr;
+          gap: 0.75rem;
+        }
+        .product-img {
+          height: 120px;
+        }
+        .product-info {
+          padding: 0.85rem;
+        }
+        .marketplace-stats {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ============================================================
+       NAVBAR
+  ============================================================ -->
+    <nav>
+      <div class="logo" onclick="navigateTo('landing')">
+        <div class="logo-icon">
+          <i data-lucide="recycle" style="width: 18px; height: 18px"></i>
+        </div>
+        ECOPILAH
+      </div>
+      <div class="nav-links" id="nav-unauth">
+        <button class="btn btn-ghost" onclick="openAuthModal('login')">
+          Masuk
+        </button>
+        <button class="btn btn-primary" onclick="openAuthModal('register')">
+          Daftar Gratis
+        </button>
+      </div>
+      <div class="nav-links" id="nav-auth" style="display: none">
+      <div id="user-role-badge" class="badge-pill perak" style="font-size:0.75rem;padding:4px 10px;">Warga</div>
+      <button class="nav-btn" id="btn-nav-dash" onclick="handleDashNav()">Dashboard</button>
+      <button class="nav-btn" onclick="navigateTo('marketplace')" style="display:flex;align-items:center;gap:4px;"><i data-lucide="store" style="width:14px;height:14px;"></i> Marketplace</button>
+      <button class="nav-btn" onclick="logout()">Keluar</button>
+    </div>    </div>
+    </nav>
+
+    <!-- ============================================================
+       LANDING PAGE
+  ============================================================ -->
+    <div id="landing" class="view active container">
+      <!-- HERO -->
+      <section class="hero">
+        <div class="hero-content">
+          <div class="hero-badge">
+            <i data-lucide="leaf" style="width: 12px; height: 12px"></i>
+            Smart Environment · Banjarmasin
+          </div>
+          <h1>
+            <span style="white-space: nowrap">Ubah Sampah</span><br />
+            <span style="white-space: nowrap">Jadi Lebih Mudah</span><br />
+            <span style="white-space: nowrap">Bersama <span class="accent">ECOPILAH</span></span>
+          </h1>
+          <p>
+            Platform pengelolaan sampah untuk warga Banjarmasin.
+            ECOPILAH sampahmu, kumpulkan poin, dan tukarkan dengan kebutuhan
+            sehari-hari.
+          </p>
+          <div class="hero-actions">
+            <button
+              class="btn btn-primary btn-lg"
+              onclick="openAuthModal('register')"
+            >
+              <i data-lucide="rocket" style="width: 16px; height: 16px"></i>
+              Mulai Sekarang
+            </button>
+            <button
+              class="btn btn-ghost btn-lg"
+              onclick="openAuthModal('login')"
+            >
+              Sudah punya akun
+            </button>
+          </div>
+        </div>
+
+        <div class="hero-visual">
+          <div class="hero-graphic">
+            <div class="hero-graphic-icon">
+              <i data-lucide="recycle" style="width: 48px; height: 48px"></i>
+            </div>
+            <div class="hero-graphic-title">ECOPILAH</div>
+            <div class="hero-graphic-sub">Platform Sampah Cerdas</div>
+
+
+          </div>
+        </div>
+      </section>
+
+      <!-- STATS -->
+      <div class="stats-row">
+        <div class="card stat-item">
+          <div class="stat-icon-wrap">
+            <i data-lucide="users" style="width: 24px; height: 24px"></i>
+          </div>
+          <h3>1.245</h3>
+          <p>Warga Bergabung</p>
+        </div>
+        <div class="card stat-item">
+          <div class="stat-icon-wrap">
+            <i data-lucide="coins" style="width: 24px; height: 24px"></i>
+          </div>
+          <h3>125K+</h3>
+          <p>Poin Dibagikan</p>
+        </div>
+        <div class="card stat-item">
+          <div class="stat-icon-wrap">
+            <i data-lucide="trash-2" style="width: 24px; height: 24px"></i>
+          </div>
+          <h3>8.450 kg</h3>
+          <p>Sampah Terkumpul</p>
+        </div>
+      </div>
+
+      <!-- HOW IT WORKS -->
+      <div class="section-header">
+        <span class="section-label">Cara Kerja</span>
+        <h2>4 Langkah Mudah Jadi Pahlawan Lingkungan</h2>
+        <p>
+          Proses yang sederhana dan menyenangkan, dirancang agar siapapun bisa
+          berpartisipasi.
+        </p>
+      </div>
+
+      <div class="steps-grid">
+        <div class="card step-card">
+          <div class="step-num">Langkah 1</div>
+          <div class="step-icon-wrap">
+            <i data-lucide="scissors" style="width: 22px; height: 22px"></i>
+          </div>
+          <h4>Pilah Sampah</h4>
+          <p>
+            Pisahkan sampah organik & anorganik dari rumah sebelum diajukan penjemputan.
+          </p>
+        </div>
+        <div class="card step-card">
+          <div class="step-num">Langkah 2</div>
+          <div class="step-icon-wrap">
+            <i data-lucide="truck" style="width: 22px; height: 22px"></i>
+          </div>
+          <h4>Jemput Digital</h4>
+          <p>
+            Ajukan penjemputan via aplikasi, kurir/petugas Ecopilah akan datang menjemput.
+          </p>
+        </div>
+        <div class="card step-card">
+          <div class="step-num">Langkah 3</div>
+          <div class="step-icon-wrap">
+            <i data-lucide="coins" style="width: 22px; height: 22px"></i>
+          </div>
+          <h4>Dapatkan Poin</h4>
+          <p>
+            Poin otomatis masuk begitu sampah diverifikasi di Rumah Pemilahan (Sorting Hub).
+          </p>
+        </div>
+        <div class="card step-card">
+          <div class="step-num">Langkah 4</div>
+          <div class="step-icon-wrap">
+            <i data-lucide="shopping-bag" style="width: 22px; height: 22px"></i>
+          </div>
+          <h4>Tukar & Marketplace</h4>
+          <p>
+            Tukarkan poin dengan sembako atau belanja produk daur ulang di Marketplace.
+          </p>
+        </div>
+      </div>
+    </div>
+    <!-- /landing -->
+
+    <!-- ============================================================
+       DASHBOARD PAGE
+  ============================================================ -->
+    <div id="dashboard" class="view container">
+      <div class="dash-header">
+        <div class="user-profile">
+          <div class="avatar" id="user-avatar">A</div>
+          <div>
+            <h2 id="user-name">Ahmad Fauzi</h2>
+            <p>Warga Banjarmasin</p>
+          </div>
+        </div>
+        <div class="badge-pill perak" id="user-badge-display">
+          <i data-lucide="award" style="width: 14px; height: 14px"></i>
+          <span id="user-badge">Perak</span>
+        </div>
+      </div>
+
+      <div class="dash-grid">
+        <!-- Points Card -->
+        <div class="card points-card">
+          <h3>Saldo Poin</h3>
+          <div class="points-value" id="dashboard-points">0</div>
+          <p>Terus kumpulkan poin untuk mencapai tier Emas!</p>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <div class="card action-card" onclick="navigateTo('setor')">
+            <div class="action-icon-wrap">
+              <i data-lucide="scale" style="width: 20px; height: 20px"></i>
+            </div>
+            <div>
+              <h4>Setor Sampah</h4>
+              <p>Catat setoran hari ini</p>
+            </div>
+          </div>
+          <div class="card action-card" onclick="navigateTo('tukar')">
+            <div class="action-icon-wrap">
+              <i data-lucide="gift" style="width: 20px; height: 20px"></i>
+            </div>
+            <div>
+              <h4>Tukar Poin</h4>
+              <p>Lihat katalog hadiah</p>
+            </div>
+          </div>
+          <div class="card action-card" onclick="navigateTo('leaderboard')">
+            <div class="action-icon-wrap">
+              <i data-lucide="trophy" style="width: 20px; height: 20px"></i>
+            </div>
+            <div>
+              <h4>Leaderboard</h4>
+              <p>Peringkat warga aktif</p>
+            </div>
+          </div>
+          <div class="card action-card" onclick="navigateTo('marketplace')">
+            <div class="action-icon-wrap" style="background: var(--amber-50); color: var(--amber-600);">
+              <i data-lucide="store" style="width: 20px; height: 20px"></i>
+            </div>
+            <div>
+              <h4>Marketplace</h4>
+              <p>Produk daur ulang</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status Penjemputan Sampah -->
+      <div id="pickup-status-container" style="margin-bottom: 2rem; display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <p class="section-title" style="margin: 0;">Status Penjemputan & Pengantaran</p>
+          <span style="font-size: 0.78rem; color: var(--text-muted);">Realtime Tracking</span>
+        </div>
+        <div id="pickup-list" style="display: flex; flex-direction: column; gap: 1rem;">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <p class="section-title">Aktivitas Terakhir</p>
+      <div class="card">
+        <div class="activity-list" id="recent-activity">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+    <!-- /dashboard -->
+
+    <!-- ============================================================
+       PETUGAS DASHBOARD PAGE (PORTAL Ecopilah)
+  ============================================================ -->
+    <div id="petugas-dashboard" class="view container">
+      <div class="dash-header">
+        <div class="user-profile">
+          <div class="avatar" style="background:#2563eb;color:white;" id="petugas-avatar">B</div>
+          <div>
+            <h2 id="petugas-name">Bambang S.</h2>
+            <p id="petugas-role-title">Petugas Kurir Kebersihan Ecopilah Kota Banjarmasin</p>
+          </div>
+        </div>
+        <div class="badge-pill" style="background:#eff6ff;color:#1d4ed8;border-color:#dbeafe;">
+          <i data-lucide="shield-check" style="width:14px;height:14px;"></i>
+          <span>Petugas Resmi Ecopilah</span>
+        </div>
+      </div>
+
+      <!-- Quick Stats Petugas -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1.25rem;margin-bottom:2rem;">
+        <div class="card" style="padding:1.25rem;text-align:center;">
+          <p style="font-size:0.75rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Tugas Hari Ini</p>
+          <h3 id="stat-petugas-total" style="font-size:2rem;color:var(--text-primary);margin-top:4px;">0</h3>
+        </div>
+        <div class="card" style="padding:1.25rem;text-align:center;border-left:4px solid #c2410c;">
+          <p style="font-size:0.75rem;color:#c2410c;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Perlu Penjemputan</p>
+          <h3 id="stat-petugas-pending" style="font-size:2rem;color:#c2410c;margin-top:4px;">0</h3>
+        </div>
+        <div class="card" style="padding:1.25rem;text-align:center;border-left:4px solid #2563eb;">
+          <p style="font-size:0.75rem;color:#2563eb;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Diantar ke Galeri ECOPILAH</p>
+          <h3 id="stat-petugas-transit" style="font-size:2rem;color:#2563eb;margin-top:4px;">0</h3>
+        </div>
+        <div class="card" style="padding:1.25rem;text-align:center;border-left:4px solid #16a34a;">
+          <p style="font-size:0.75rem;color:#16a34a;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Selesai Verified</p>
+          <h3 id="stat-petugas-done" style="font-size:2rem;color:#16a34a;margin-top:4px;">0</h3>
+        </div>
+      </div>
+
+      <!-- Header & Filter -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap;gap:1rem;">
+        <div>
+          <p class="section-title" style="margin:0;">Daftar Penjemputan Sampah Rumah Warga</p>
+          <p style="font-size:0.82rem;color:var(--text-muted);margin-top:2px;">Ambil sampah dari alamat warga & antarkan ke Galeri ECOPILAH untuk verifikasi poin.</p>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-ghost" style="font-size:0.78rem;padding:6px 12px;" onclick="filterPetugasTasks('all')" id="btn-filter-all">Semua</button>
+          <button class="btn btn-ghost" style="font-size:0.78rem;padding:6px 12px;" onclick="filterPetugasTasks('pending')" id="btn-filter-pending">Perlu Dijemput</button>
+          <button class="btn btn-ghost" style="font-size:0.78rem;padding:6px 12px;" onclick="filterPetugasTasks('in_transit')" id="btn-filter-transit">Diantar ke Galeri ECOPILAH</button>
+        </div>
+      </div>
+
+      <!-- Task List -->
+      <div id="petugas-task-list" style="display:flex;flex-direction:column;gap:1.25rem;">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+    <!-- /petugas-dashboard -->
+
+    <!-- ============================================================
+       SETOR PAGE
+  ============================================================ -->
+    <div id="setor" class="view container">
+      <button class="page-back" onclick="navigateTo('dashboard')">
+        <i data-lucide="arrow-left" style="width: 16px; height: 16px"></i>
+        Kembali ke Dashboard
+      </button>
+
+      <h1 class="page-title">Setor Sampah</h1>
+      <p class="page-subtitle">
+        Pilih jenis sampah dan masukkan beratnya dalam kilogram.
+      </p>
+
+      <div class="waste-types">
+        <div
+          class="card waste-card"
+          onclick="selectWaste('organik')"
+          id="card-organik"
+        >
+          <div class="waste-card-icon organik">
+            <i data-lucide="leaf" style="width: 26px; height: 26px"></i>
+          </div>
+          <h4>Organik</h4>
+          <div class="waste-rate">30 poin / kg</div>
+          <p>sisa makanan, daun, minyak jelantah, sabut kelapa</p>
+        </div>
+        <div
+          class="card waste-card"
+          onclick="selectWaste('anorganik')"
+          id="card-anorganik"
+        >
+          <div class="waste-card-icon anorganik">
+            <i data-lucide="recycle" style="width: 26px; height: 26px"></i>
+          </div>
+          <h4>Anorganik</h4>
+          <div class="waste-rate">50 poin / kg</div>
+          <p>plastik, kertas, kaleng</p>
+        </div>
+      </div>
+
+      <div class="card weight-section">
+        <h3>Berat Sampah</h3>
+        <div class="weight-input">
+          <div style="text-align: center">
+            <input
+              type="number"
+              class="weight-input-field"
+              id="weight-display"
+              value="1.0"
+              min="0.1"
+              max="1000"
+              step="0.1"
+              oninput="updateSetoranUI()"
+              onblur="clampWeight()"
+              placeholder="0.0"
+            />
+            <div class="weight-unit">kilogram</div>
+          </div>
+        </div>
+
+        <div class="calc-display">
+          <i
+            data-lucide="coins"
+            style="width: 18px; height: 18px; color: #16a34a"
+          ></i>
+          Estimasi Poin: <strong id="calc-points">0</strong>
+        </div>
+
+        <!-- Alamat & Kontak Penjemputan -->
+        <div style="width: 100%; max-width: 480px; margin: 1.5rem auto 0; text-align: left; background: var(--gray-50); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 1rem;">
+            <div style="width: 30px; height: 30px; border-radius: var(--radius-sm); background: var(--green-100); color: var(--primary); display: flex; align-items: center; justify-content: center;">
+              <i data-lucide="map-pin" style="width: 16px; height: 16px"></i>
+            </div>
+            <div>
+              <h4 style="margin: 0; font-size: 0.95rem; color: var(--text-primary);">Lokasi & Kontak Penjemputan</h4>
+              <p style="margin: 0; font-size: 0.75rem; color: var(--text-muted);">Petugas/Kurir akan menjemput sampah ke alamat ini</p>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label" for="pickup-address" style="font-size: 0.8rem;">
+              Alamat Lengkap Penjemputan <span style="color: var(--red-500)">*</span>
+            </label>
+            <textarea
+              id="pickup-address"
+              class="form-control"
+              rows="2"
+              placeholder="Contoh: Jl. Lambung Mangkurat No. 45, RT 08 RW 02, Banjarmasin"
+              style="font-size: 0.85rem;"
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="pickup-phone" style="font-size: 0.8rem;">
+              Nomor WhatsApp / Telepon Aktif <span style="color: var(--red-500)">*</span>
+            </label>
+            <input
+              type="tel"
+              id="pickup-phone"
+              class="form-control"
+              placeholder="Contoh: 0812-3456-7890"
+              style="font-size: 0.85rem;"
+              required
+            />
+          </div>
+        </div>
+
+        <button
+          class="btn btn-primary btn-lg btn-block"
+          style="max-width: 340px; margin-top: 1.5rem;"
+          onclick="submitSetoran()"
+        >
+          <i data-lucide="truck" style="width: 18px; height: 18px"></i>
+          Konfirmasi & Minta Penjemputan
+        </button>
+      </div>
+    </div>
+    <!-- /setor -->
+
+    <!-- ============================================================
+       LEADERBOARD PAGE
+  ============================================================ -->
+    <div id="leaderboard" class="view container">
+      <button class="page-back" onclick="navigateTo('dashboard')">
+        <i data-lucide="arrow-left" style="width: 16px; height: 16px"></i>
+        Kembali ke Dashboard
+      </button>
+
+      <h1 class="page-title">Leaderboard</h1>
+      <p class="page-subtitle">
+        Peringkat warga Banjarmasin dengan kontribusi lingkungan terbaik bulan
+        ini.
+      </p>
+
+      <div class="lb-list" id="lb-container">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+    <!-- /leaderboard -->
+
+    <!-- ============================================================
+       TUKAR PAGE
+  ============================================================ -->
+    <div id="tukar" class="view container">
+      <button class="page-back" onclick="navigateTo('dashboard')">
+        <i data-lucide="arrow-left" style="width: 16px; height: 16px"></i>
+        Kembali ke Dashboard
+      </button>
+
+      <div class="tukar-header">
+        <div>
+          <h1 class="page-title">Tukar Poin</h1>
+          <p class="page-subtitle" style="margin: 0">
+            Pilih hadiah dari katalog di bawah ini.
+          </p>
+        </div>
+        <div class="saldo-pill">
+          <i data-lucide="wallet" style="width: 15px; height: 15px"></i>
+          Saldo: <strong id="tukar-points-display">0 Poin</strong>
+        </div>
+      </div>
+
+      <div class="rewards-grid" id="rewards-container">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+    <!-- /tukar -->
+
+    <!-- ============================================================
+       MARKETPLACE PAGE
+  ============================================================ -->
+    <div id="marketplace" class="view container">
+      <button class="page-back" onclick="navigateTo('dashboard')">
+        <i data-lucide="arrow-left" style="width: 16px; height: 16px"></i>
+        Kembali ke Dashboard
+      </button>
+
+      <div class="marketplace-header">
+        <div>
+          <h1 class="page-title">Marketplace ECOPILAH</h1>
+          <p class="page-subtitle" style="margin: 0">
+            Produk ramah lingkungan hasil pengolahan sampah Banjarmasin
+          </p>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="marketplace-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
+        <div class="mp-stat-card">
+          <div class="stat-icon" style="background: var(--green-50); color: var(--green-600);">
+            <i data-lucide="package" style="width: 20px; height: 20px;"></i>
+          </div>
+          <div class="stat-val">8</div>
+          <div class="stat-label">Total Produk</div>
+        </div>
+        <div class="mp-stat-card">
+          <div class="stat-icon" style="background: var(--blue-50); color: var(--blue-600);">
+            <i data-lucide="recycle" style="width: 20px; height: 20px;"></i>
+          </div>
+          <div class="stat-val">120 kg</div>
+          <div class="stat-label">Sampah Terolah</div>
+        </div>
+        <div class="mp-stat-card">
+          <div class="stat-icon" style="background: var(--amber-50); color: var(--amber-600);">
+            <i data-lucide="star" style="width: 20px; height: 20px;"></i>
+          </div>
+          <div class="stat-val">4.8</div>
+          <div class="stat-label">Rating Galeri ECOPILAH</div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="marketplace-filters" style="margin-bottom: 1.5rem;">
+        <button class="filter-btn active" onclick="filterProducts('all')">Semua</button>
+        <button class="filter-btn" onclick="filterProducts('kompos')">Kompos & Pupuk</button>
+        <button class="filter-btn" onclick="filterProducts('ecobrick')">Ecobrick</button>
+        <button class="filter-btn" onclick="filterProducts('kerajinan')">Kerajinan Plastik</button>
+      </div>
+
+      <!-- Product Grid -->
+      <div class="marketplace-grid" id="marketplace-grid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+    <!-- /marketplace -->
+
+    <!-- Product Detail Modal -->
+    <div class="product-modal-overlay" id="product-modal">
+      <div class="product-modal">
+        <div class="product-modal-img" id="pm-img">
+          <i data-lucide="leaf" style="width: 80px; height: 80px; opacity: 0.5;"></i>
+        </div>
+        <div class="product-modal-body">
+          <div class="pm-cat" id="pm-cat">Kategori</div>
+          <h3 id="pm-name">Nama Produk</h3>
+          <p class="pm-desc" id="pm-desc">Deskripsi produk</p>
+          <div class="pm-price" id="pm-price">Rp 0</div>
+          <div class="product-modal-actions">
+            <button class="btn btn-outline" onclick="closeProductModal()">Tutup</button>
+            <button class="btn btn-primary" id="pm-order-btn" onclick="orderProduct()">Pesan via WhatsApp</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+       AUTH MODAL
+  ============================================================ -->
+    <div class="modal-overlay" id="auth-modal">
+      <div class="card modal-card">
+        <button class="modal-close" onclick="closeAuthModal()">
+          <i data-lucide="x" style="width: 16px; height: 16px"></i>
+        </button>
+
+        <h2 id="auth-title">Masuk ke ECOPILAH</h2>
+        <p id="auth-subtitle">Selamat datang kembali!</p>
+
+        <!-- Akses Cepat Demo -->
+        <div style="background: var(--gray-50); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 12px; margin-bottom: 1.25rem;">
+          <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; text-align: center; letter-spacing: 0.04em;">⚡ Akses Cepat Demo (Pilih Peran)</div>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn btn-outline" style="flex: 1; font-size: 0.78rem; padding: 7px 10px;" onclick="fillDemoAuth('warga')">
+              <i data-lucide="user" style="width: 14px; height: 14px"></i> Login Warga
+            </button>
+            <button type="button" class="btn btn-outline" style="flex: 1; font-size: 0.78rem; padding: 7px 10px; color:#2563eb; border-color:#2563eb;" onclick="fillDemoAuth('petugas')">
+              <i data-lucide="truck" style="width: 14px; height: 14px"></i> Login Petugas Ecopilah
+            </button>
+          </div>
+        </div>
+
+        <form id="auth-form" onsubmit="handleAuth(event)">
+          <div class="form-group" id="name-group" style="display: none">
+            <label class="form-label">Nama Lengkap</label>
+            <input type="text" class="form-control" id="auth-name" placeholder="Masukkan nama lengkap" />
+          </div>
+          <div class="form-group" id="role-group" style="display: none">
+            <label class="form-label">Daftar Sebagai</label>
+            <select class="form-control" id="auth-role">
+              <option value="warga">Warga Rumah Tangga</option>
+              <option value="petugas">Petugas Kebersihan (Ecopilah)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" id="auth-email" required placeholder="nama@email.com" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-control" id="auth-password" required placeholder="••••••••" />
+          </div>
+          <button type="submit" class="btn btn-primary btn-block btn-lg" id="auth-btn">Masuk</button>
+        </form>
+
+        <div class="auth-toggle" id="auth-toggle-container"></div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+       PETUGAS VERIFIKASI & TIMBANG MODAL
+    ============================================================ -->
+    <div class="modal-overlay" id="petugas-verify-modal">
+      <div class="card modal-card" style="max-width: 480px;">
+        <button class="modal-close" onclick="closePetugasVerifyModal()">
+          <i data-lucide="x" style="width: 16px; height: 16px"></i>
+        </button>
+
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 0.5rem;">
+          <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center;">
+            <i data-lucide="scale" style="width: 20px; height: 20px"></i>
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-primary);">Verifikasi Timbangan</h3>
+            <p style="margin: 0; font-size: 0.78rem; color: var(--text-muted);">Sesuaikan poin warga berdasarkan berat timbangan aktual di Sorting Hub</p>
+          </div>
+        </div>
+
+        <input type="hidden" id="pv-pickup-id" />
+
+        <!-- Info Tiket -->
+        <div style="background: var(--gray-50); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; margin: 1rem 0; font-size: 0.85rem;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <span style="color: var(--text-muted);">Warga:</span>
+            <strong id="pv-resident-name" style="color: var(--text-primary);">-</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <span style="color: var(--text-muted);">Jenis Sampah:</span>
+            <span id="pv-waste-type" style="font-weight: 600; color: var(--primary);">-</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">Estimasi Awal Warga:</span>
+            <span id="pv-estimated-info" style="color: var(--text-secondary);">-</span>
+          </div>
+        </div>
+
+        <!-- Input Berat Aktual -->
+        <div class="form-group">
+          <label class="form-label" for="pv-actual-weight" style="display: flex; justify-content: space-between;">
+            <span>Berat Hasil Timbang Aktual (kg) <span style="color: var(--red-500)">*</span></span>
+            <span id="pv-rate-badge" style="color: var(--primary); font-size: 0.78rem; font-weight: 600;">30 Poin / kg</span>
+          </label>
+          <input
+            type="number"
+            id="pv-actual-weight"
+            class="form-control"
+            step="0.1"
+            min="0.1"
+            max="1000"
+            style="font-size: 1.25rem; font-weight: 800; text-align: center; padding: 10px; color: var(--primary);"
+            oninput="recalcPetugasVerifyPoints()"
+          />
+        </div>
+
+        <!-- Live Recalculation Result -->
+        <div style="background: var(--green-50); border: 1px solid var(--green-200); border-radius: var(--radius-md); padding: 12px; text-align: center; margin-bottom: 1.25rem;">
+          <div style="font-size: 0.75rem; color: var(--green-800); font-weight: 700; margin-bottom: 2px;">TOTAL POIN AKHIR YANG DIBERIKAN KE WARGA:</div>
+          <div style="font-size: 1.8rem; font-weight: 800; color: var(--primary);" id="pv-calculated-points">0 Poin</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;" id="pv-diff-note">Sesuai timbangan</div>
+        </div>
+
+        <!-- Catatan Petugas -->
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label" for="pv-notes" style="font-size: 0.8rem;">Catatan Petugas / Alasan Penyesuaian (Opsional)</label>
+          <input
+            type="text"
+            id="pv-notes"
+            class="form-control"
+            placeholder="Contoh: Sampah bersih & rapi / Ada pengurangan karena basah"
+            style="font-size: 0.85rem;"
+          />
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+          <button class="btn btn-outline" style="flex: 1;" onclick="closePetugasVerifyModal()">Batal</button>
+          <button class="btn btn-primary" style="flex: 2; background: #2563eb;" onclick="confirmPetugasVerification()">
+            <i data-lucide="check-check" style="width: 16px; height: 16px"></i>
+            Konfirmasi & Berikan Poin
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast-container"></div>
+
+    <!-- ============================================================
+       JAVASCRIPT
+  ============================================================ -->
+    <script>
+      // --- FIREBASE CLOUD DATABASE CONFIGURATION ---
+      const firebaseConfig = {
+        apiKey: "AIzaSyCePT9oy-xv5LzyJJ9smiEP8FT7SdT31U8",
+        authDomain: "ecopilah.firebaseapp.com",
+        projectId: "ecopilah",
+        storageBucket: "ecopilah.firebasestorage.app",
+        messagingSenderId: "738346753262",
+        appId: "1:738346753262:web:ed6352db492780ef7b67ff"
+      };
+
+      let firestoreDB = null;
+      try {
+        if (typeof firebase !== 'undefined') {
+          firebase.initializeApp(firebaseConfig);
+          firestoreDB = firebase.firestore();
+          console.log("ECOPILAH: Firebase Cloud DB Connected Successfully!");
+        }
+      } catch (err) {
+        console.warn("Firebase Init fallback to Local DB:", err);
+      }
+
+      // Init Lucide Icons
+      lucide.createIcons();
+
+      // --- DATA & STATE ---
+      const MOCK_LEADERBOARD = [
+        { name: "Siti Aminah", points: 8500, badge: "emas" },
+        { name: "Budi Santoso", points: 7200, badge: "emas" },
+        { name: "Hj. Noorhayati", points: 6800, badge: "emas" },
+        { name: "Muhammad Rizky", points: 5400, badge: "emas" },
+        { name: "Ahmad Fauzi", points: 2450, badge: "perak" },
+        { name: "Rahmawati", points: 2100, badge: "perak" },
+        { name: "Irfan Hakim", points: 1850, badge: "perak" },
+        { name: "Sri Wahyuni", points: 1500, badge: "perak" },
+        { name: "Rudy Arifin", points: 950, badge: "hijau" },
+        { name: "Lisa Natalia", points: 820, badge: "hijau" },
+      ];
+
+      const REWARDS = [
+        { id: 1, name: "Beras 5kg", cost: 800, icon: "wheat" },
+        { id: 2, name: "Minyak Goreng 1L", cost: 250, icon: "droplet" },
+        { id: 3, name: "Gula Pasir 1kg", cost: 200, icon: "candy" },
+        { id: 4, name: "Voucher Listrik 50k", cost: 550, icon: "zap" },
+        { id: 5, name: "Pulsa 20k", cost: 220, icon: "smartphone" },
+        { id: 6, name: "Uang 50k", cost: 500, icon: "banknote" },
+      ];
+
+      const WASTE_RATES = { organik: 30, anorganik: 50, b3: 30, Jelantah: 20, jelantah: 20 };
+
+      let currentUser = null;
+      let authMode = "login";
+      let selectedWasteType = null;
+      let currentWeight = 1.0;
+      let petugasTaskFilter = 'all';
+
+      // --- INIT ---
+      function getGlobalPickups() {
+        const stored = localStorage.getItem("ECOPILAH_global_pickups");
+        if (!stored) return [];
+        return JSON.parse(stored);
+      }
+
+      function saveGlobalPickups(pickups) {
+        localStorage.setItem("ECOPILAH_global_pickups", JSON.stringify(pickups));
+      }
+
+      // Realtime Cloud Sync
+      function syncPickupsToCloud(pickup) {
+        if (firestoreDB && pickup && pickup.id) {
+          firestoreDB.collection("pickups").doc(pickup.id).set(pickup, { merge: true })
+            .then(() => console.log("Pickup synced to cloud:", pickup.id))
+            .catch(e => console.warn("Cloud sync error:", e));
+        }
+      }
+
+      function seedInitialCloudData() {
+        if (!firestoreDB) return;
+        try {
+          // Seed initial user Ahmad Fauzi
+          firestoreDB.collection("users").doc("ahmad_demo_com").set({
+            name: "Ahmad Fauzi",
+            email: "ahmad@demo.com",
+            password: "password123",
+            role: "warga",
+            points: 2450,
+            history: [
+              { date: "2026-08-15", desc: "Setoran Organik (10kg)", points: 300 }
+            ]
+          }, { merge: true });
+
+          // Seed default pickups
+          const defaultPickups = [
+            { id: "PKP-1042", residentName: "Ahmad Fauzi", address: "Jl. A. Yani Km 4.5", type: "Minyak Jelantah", weight: 3.0, points: 60, date: "2026-08-15 10:45", status: "in_transit", officer: "Bambang S. (Ecopilah)", phone: "0812-3456-7890" },
+            { id: "PKP-1043", residentName: "Siti Aminah", address: "Jl. Lambung Mangkurat No. 88", type: "Anorganik", weight: 6.5, points: 325, date: "2026-08-15 11:00", status: "pending", officer: "Belum Ditugaskan", phone: "0852-9876-5432" },
+            { id: "PKP-1044", residentName: "Budi Santoso", address: "Jl. Sultan Adam No. 24", type: "Organik", weight: 12.0, points: 360, date: "2026-08-15 09:30", status: "pending", officer: "Belum Ditugaskan", phone: "0813-5555-1234" }
+          ];
+
+          defaultPickups.forEach(p => {
+            firestoreDB.collection("pickups").doc(p.id).set(p, { merge: true });
+          });
+        } catch (e) {
+          console.warn("Cloud seed error:", e);
+        }
+      }
+
+      function initCloudListeners() {
+        if (!firestoreDB) return;
+        try {
+          firestoreDB.collection("pickups").onSnapshot((snapshot) => {
+            if (!snapshot.empty) {
+              const cloudPickups = [];
+              snapshot.forEach((doc) => cloudPickups.push(doc.data()));
+              cloudPickups.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+              saveGlobalPickups(cloudPickups);
+              if (currentUser) {
+                if (currentUser.role === 'petugas') updatePetugasDashboardUI();
+                else updateDashboardUI();
+              }
+            }
+          }, (err) => console.log("Firestore offline/waiting:", err));
+        } catch (e) {
+          console.warn("Listener error:", e);
+        }
+      }
+
+      let userDocUnsubscribe = null;
+      function listenToCurrentUserCloud() {
+        if (!firestoreDB || !currentUser || !currentUser.email) return;
+        if (userDocUnsubscribe) {
+          try { userDocUnsubscribe(); } catch (e) {}
+        }
+        const userDocId = currentUser.email.toLowerCase().replace(/[^a-zA-Z0-9]/g, "_");
+        userDocUnsubscribe = firestoreDB.collection("users").doc(userDocId).onSnapshot((doc) => {
+          if (doc.exists) {
+            const cloudUser = doc.data();
+            currentUser.points = cloudUser.points !== undefined ? cloudUser.points : currentUser.points;
+            currentUser.history = cloudUser.history || currentUser.history || [];
+            currentUser.name = cloudUser.name || currentUser.name;
+            currentUser.role = cloudUser.role || currentUser.role;
+            localStorage.setItem("ECOPILAH_session", JSON.stringify(currentUser));
+            sessionStorage.setItem("ECOPILAH_session", JSON.stringify(currentUser));
+            if (currentUser.role !== 'petugas') {
+              updateDashboardUI();
+            }
+          }
+        }, (err) => console.warn("User live sync listener:", err));
+      }
+
+      function init() {
+        if (!localStorage.getItem("ECOPILAH_global_pickups")) {
+          saveGlobalPickups([
+            { id: "PKP-1042", residentName: "Ahmad Fauzi", residentEmail: "ahmad@demo.com", address: "Jl. A. Yani Km 4.5", type: "Minyak Jelantah", weight: 3.0, points: 60, date: "2026-08-08 10:45", status: "in_transit", officer: "Bambang S. (Ecopilah)", phone: "0812-3456-7890" },
+            { id: "PKP-1043", residentName: "Siti Aminah", residentEmail: "siti@demo.com", address: "Jl. Lambung Mangkurat No. 88", type: "Anorganik", weight: 6.5, points: 162, date: "2026-08-08 11:00", status: "pending", officer: "Belum Ditugaskan", phone: "0852-9876-5432" },
+            { id: "PKP-1044", residentName: "Budi Santoso", residentEmail: "budi@demo.com", address: "Jl. Sultan Adam No. 24", type: "Organik", weight: 12.0, points: 120, date: "2026-08-08 09:30", status: "pending", officer: "Belum Ditugaskan", phone: "0813-5555-1234" }
+          ]);
+        }
+
+        renderLeaderboard();
+        renderRewards();
+        seedInitialCloudData();
+        initCloudListeners();
+
+        const session = localStorage.getItem("ECOPILAH_session") || sessionStorage.getItem("ECOPILAH_session");
+        if (session) {
+          currentUser = JSON.parse(session);
+          updateUIForUser();
+          listenToCurrentUserCloud();
+        } else {
+          navigateTo("landing");
+        }
+      }
+
+      // --- UTILS ---
+      function showToast(msg, type = "success") {
+        const container = document.getElementById("toast-container");
+        const t = document.createElement("div");
+        t.className = `toast ${type}`;
+        t.innerHTML = `<span class="toast-dot"><i data-lucide="${type === "success" ? "check-circle" : "x-circle"}" style="width:16px;height:16px;"></i></span> ${msg}`;
+        container.appendChild(t);
+        lucide.createIcons({ nodes: [t] });
+        setTimeout(() => {
+          t.style.opacity = "0";
+          t.style.transition = "opacity .3s";
+          setTimeout(() => t.remove(), 300);
+        }, 3200);
+      }
+      
+      function fillDemoAuth(role) {
+        if (role === 'warga') {
+          document.getElementById('auth-email').value = 'ahmad@demo.com';
+          document.getElementById('auth-password').value = 'password123';
+          showToast('Akun Demo Warga terisi! Klik Masuk.');
+        } else if (role === 'petugas') {
+          document.getElementById('auth-email').value = 'bambang@petugas.com';
+          document.getElementById('auth-password').value = 'password123';
+          showToast('Akun Demo Petugas Ecopilah terisi! Klik Masuk.');
+        }
+      }
+
+      // --- NAVIGATION ---
+      function navigateTo(viewId) {
+        document
+          .querySelectorAll(".view")
+          .forEach((v) => v.classList.remove("active"));
+        const target = document.getElementById(viewId);
+        if (target) target.classList.add("active");
+
+        if (viewId === "setor") {
+          selectedWasteType = null;
+          currentWeight = 1.0;
+          document
+            .querySelectorAll(".waste-card")
+            .forEach((c) => c.classList.remove("selected"));
+          updateSetoranUI();
+
+          const addrEl = document.getElementById("pickup-address");
+          const phoneEl = document.getElementById("pickup-phone");
+          if (addrEl && currentUser) {
+            addrEl.value = currentUser.address || (currentUser.name === "Ahmad Fauzi" ? "Jl. A. Yani Km 4.5 No. 12, Banjarmasin Timur" : "");
+          }
+          if (phoneEl && currentUser) {
+            phoneEl.value = currentUser.phone || (currentUser.name === "Ahmad Fauzi" ? "0812-3456-7890" : "");
+          }
+          lucide.createIcons();
+        }
+        if (viewId === "dashboard") updateDashboardUI();
+        if (viewId === "petugas-dashboard") updatePetugasDashboardUI();
+        if (viewId === "marketplace") renderMarketplace();
+        if (viewId === "tukar") {
+          const ptDisplay = document.getElementById("tukar-points-display");
+          if (ptDisplay) ptDisplay.innerText = `${currentUser ? currentUser.points : 0} Poin`;
+        }
+        window.scrollTo(0, 0);
+      }
+
+      function openAuthModal(mode) {
+        authMode = mode;
+        const modal = document.getElementById("auth-modal");
+        const title = document.getElementById("auth-title");
+        const sub = document.getElementById("auth-subtitle");
+        const nameGrp = document.getElementById("name-group");
+        const roleGrp = document.getElementById("role-group");
+        const btn = document.getElementById("auth-btn");
+        const toggleT = document.getElementById("auth-toggle-container");
+
+        if (mode === "login") {
+          title.innerText = "Masuk ke ECOPILAH";
+          sub.innerText = "Pilih peran & masuk ke akun Anda.";
+          nameGrp.style.display = "none";
+          roleGrp.style.display = "none";
+          document.getElementById("auth-name").removeAttribute("required");
+          btn.innerText = "Masuk";
+          toggleT.innerHTML = 'Belum punya akun? <a onclick="toggleAuthMode()" style="color:var(--primary);cursor:pointer;font-weight:600;">Daftar di sini</a>';
+          document.getElementById("auth-email").value = "ahmad@demo.com";
+          document.getElementById("auth-password").value = "password123";
+        } else {
+          title.innerText = "Daftar ECOPILAH";
+          sub.innerText = "Mulai perjalanan pengelolaan sampah cerdas.";
+          nameGrp.style.display = "block";
+          roleGrp.style.display = "block";
+          document.getElementById("auth-name").setAttribute("required", "true");
+          btn.innerText = "Buat Akun";
+          toggleT.innerHTML = 'Sudah punya akun? <a onclick="toggleAuthMode()" style="color:var(--primary);cursor:pointer;font-weight:600;">Masuk di sini</a>';
+          document.getElementById("auth-email").value = "";
+          document.getElementById("auth-password").value = "";
+          document.getElementById("auth-name").value = "";
+        }
+        modal.classList.add("active");
+        lucide.createIcons();
+      }
+
+      function closeAuthModal() {
+        document.getElementById("auth-modal").classList.remove("active");
+      }
+      function toggleAuthMode() {
+        openAuthModal(authMode === "login" ? "register" : "login");
+      }
+
+      // --- MULTI-USER DB HELPERS ---
+      function getUsersDB() {
+        const stored = localStorage.getItem("ECOPILAH_users_db");
+        return stored ? JSON.parse(stored) : [];
+      }
+
+      function saveUserToDB(userObj) {
+        if (!userObj || !userObj.email) return;
+        const db = getUsersDB();
+        const existingIdx = db.findIndex(
+          (u) => u.email.toLowerCase() === userObj.email.toLowerCase()
+        );
+        if (existingIdx !== -1) {
+          db[existingIdx] = userObj;
+        } else {
+          db.push(userObj);
+        }
+        localStorage.setItem("ECOPILAH_users_db", JSON.stringify(db));
+
+        // Cloud sync user profile & points
+        if (firestoreDB && userObj.email) {
+          const userDocId = userObj.email.toLowerCase().replace(/[^a-zA-Z0-9]/g, "_");
+          firestoreDB.collection("users").doc(userDocId).set(userObj, { merge: true })
+            .then(() => console.log("✅ User synced to Firebase Cloud DB:", userDocId))
+            .catch(e => console.error("❌ User cloud sync error:", e));
+        }
+      }
+
+      function findUserInDB(email) {
+        if (!email) return null;
+        const db = getUsersDB();
+        return db.find(
+          (u) => u.email.toLowerCase() === email.toLowerCase()
+        );
+      }
+
+      async function handleAuth(e) {
+        e.preventDefault();
+        const email = document.getElementById("auth-email").value.trim().toLowerCase();
+        const password = document.getElementById("auth-password").value;
+        const userDocId = email.replace(/[^a-zA-Z0-9]/g, "_");
+
+        if (authMode === "login") {
+          let user = null;
+          if (email === "bambang@petugas.com") {
+            if (password !== "password123" && password !== "admin123") {
+              showToast("Password atau email salah!", "error");
+              return;
+            }
+            user = {
+              name: "Bambang S.",
+              email: "bambang@petugas.com",
+              role: "petugas",
+              area: "Banjarmasin Tengah & Timur"
+            };
+          } else {
+            // First check local DB
+            user = findUserInDB(email);
+
+            // Fetch from Firestore Cloud if available
+            if (firestoreDB) {
+              try {
+                const docSnap = await firestoreDB.collection("users").doc(userDocId).get();
+                if (docSnap.exists) {
+                  user = docSnap.data();
+                }
+              } catch (err) {
+                console.warn("Firestore fetch user error:", err);
+              }
+            }
+
+            if (!user) {
+              showToast("Password atau email salah!", "error");
+              return;
+            }
+
+            // Verify password
+            if (user.password && user.password !== password) {
+              showToast("Password atau email salah!", "error");
+              return;
+            }
+            if (!user.password && email === "ahmad@demo.com" && password !== "password123") {
+              showToast("Password atau email salah!", "error");
+              return;
+            }
+          }
+
+          currentUser = user;
+          localStorage.setItem("ECOPILAH_session", JSON.stringify(currentUser));
+          sessionStorage.setItem("ECOPILAH_session", JSON.stringify(currentUser));
+          closeAuthModal();
+          updateUIForUser();
+          listenToCurrentUserCloud();
+          showToast(`Selamat datang kembali, ${currentUser.name}!`, "success");
+        } else {
+          // --- REGISTRATION MODE ---
+          const name = document.getElementById("auth-name").value.trim();
+          const role = document.getElementById("auth-role").value;
+
+          // Check if email is already registered locally or in Firestore
+          let existingUser = findUserInDB(email);
+          if (firestoreDB) {
+            try {
+              const docSnap = await firestoreDB.collection("users").doc(userDocId).get();
+              if (docSnap.exists) {
+                existingUser = docSnap.data();
+              }
+            } catch (err) {
+              console.warn("Firestore check duplicate email error:", err);
+            }
+          }
+
+          if (existingUser || email === "bambang@petugas.com" || email === "ahmad@demo.com") {
+            showToast("Akun sudah ada, gunakan email lain!", "error");
+            return;
+          }
+
+          currentUser = {
+            name: name,
+            email: email,
+            password: password,
+            role: role,
+            points: 0,
+            history: []
+          };
+
+          saveUserToDB(currentUser);
+          localStorage.setItem("ECOPILAH_session", JSON.stringify(currentUser));
+          sessionStorage.setItem("ECOPILAH_session", JSON.stringify(currentUser));
+          closeAuthModal();
+          updateUIForUser();
+          listenToCurrentUserCloud();
+          showToast(`Pendaftaran berhasil! Selamat datang, ${currentUser.name}!`, "success");
+        }
+      }
+
+      function logout() {
+        localStorage.removeItem("ECOPILAH_session");
+        sessionStorage.removeItem("ECOPILAH_session");
+        currentUser = null;
+        document.getElementById("nav-unauth").style.display = "flex";
+        document.getElementById("nav-auth").style.display = "none";
+        navigateTo("landing");
+        showToast("Berhasil keluar.");
+      }
+
+      function handleDashNav() {
+        if (currentUser && currentUser.role === "petugas") {
+          navigateTo("petugas-dashboard");
+        } else {
+          navigateTo("dashboard");
+        }
+      }
+
+      function getBadgeInfo(pts) {
+        const p = pts || 0;
+        if (p >= 5000) return { name: "Emas", cls: "emas", icon: "medal" };
+        if (p >= 1000) return { name: "Perak", cls: "perak", icon: "award" };
+        return { name: "Hijau", cls: "hijau", icon: "leaf" };
+      }
+
+      function updateUIForUser() {
+        document.getElementById("nav-unauth").style.display = "none";
+        document.getElementById("nav-auth").style.display = "flex";
+        const roleBadge = document.getElementById("user-role-badge");
+
+        if (currentUser.role === "petugas") {
+          roleBadge.className = "badge-pill";
+          roleBadge.style.cssText = "background:#eff6ff;color:#1d4ed8;border-color:#dbeafe;";
+          roleBadge.innerHTML = `<i data-lucide="truck" style="width:12px;height:12px;"></i> Petugas Ecopilah`;
+          document.getElementById("btn-nav-dash").innerText = "Portal Petugas";
+          updatePetugasDashboardUI();
+          navigateTo("petugas-dashboard");
+        } else {
+          const badge = getBadgeInfo(currentUser.points || 0);
+          roleBadge.className = `badge-pill ${badge.cls}`;
+          roleBadge.style.cssText = "";
+          roleBadge.innerHTML = `<i data-lucide="${badge.icon}" style="width:12px;height:12px;"></i> Warga`;
+          document.getElementById("btn-nav-dash").innerText = "Dashboard";
+          updateDashboardUI();
+          navigateTo("dashboard");
+        }
+        lucide.createIcons();
+      }
+
+      function animateValue(el, start, end, dur) {
+        let ts = null;
+        const step = (t) => {
+          if (!ts) ts = t;
+          const progress = Math.min((t - ts) / dur, 1);
+          el.innerHTML = Math.floor(
+            progress * (end - start) + start,
+          ).toLocaleString("id-ID");
+          if (progress < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      }
+
+      function updateDashboardUI() {
+        if (!currentUser) return;
+        document.getElementById("user-name").innerText = currentUser.name;
+        document.getElementById("user-avatar").innerText = currentUser.name
+          .charAt(0)
+          .toUpperCase();
+
+        const userPts = currentUser.points || 0;
+        const badge = getBadgeInfo(userPts);
+        const badgeEl = document.getElementById("user-badge-display");
+        if (badgeEl) {
+          badgeEl.className = `badge-pill ${badge.cls}`;
+          badgeEl.innerHTML = `<i data-lucide="${badge.icon}" style="width:14px;height:14px;"></i><span id="user-badge">${badge.name}</span>`;
+          lucide.createIcons({ nodes: [badgeEl] });
+        }
+
+        const pointsEl = document.getElementById("dashboard-points");
+        if (pointsEl) animateValue(pointsEl, 0, userPts, 900);
+
+        // Render Pickups / Tracking Status
+        renderPickupsUI();
+
+        const hist = document.getElementById("recent-activity");
+        const userHist = currentUser.history || [];
+        if (hist) {
+          if (!userHist.length) {
+            hist.innerHTML =
+              '<p style="text-align:center;padding:1.5rem 0;">Belum ada aktivitas.</p>';
+          } else {
+            hist.innerHTML = userHist
+              .slice(0, 5)
+              .map(
+                (h) => `
+            <div class="activity-item">
+              <div>
+                <div class="activity-desc">${h.desc}</div>
+                <div class="activity-date">${h.date}</div>
+              </div>
+              <div class="activity-pts ${h.points >= 0 ? "positive" : "negative"}">${h.points >= 0 ? "+" : ""}${h.points} pts</div>
+            </div>
+          `,
+              )
+              .join("");
+          }
+        }
+      }
+
+      function renderPickupsUI() {
+        const container = document.getElementById("pickup-status-container");
+        const list = document.getElementById("pickup-list");
+        const pickups = getGlobalPickups().filter(p => 
+          (p.residentEmail && currentUser.email && p.residentEmail.toLowerCase() === currentUser.email.toLowerCase()) ||
+          (p.residentName && currentUser.name && p.residentName.toLowerCase() === currentUser.name.toLowerCase())
+        );
+
+        if (pickups.length === 0) {
+          container.style.display = "none";
+          return;
+        }
+
+        container.style.display = "block";
+        list.innerHTML = pickups.map(p => {
+          let progressWidth = "0%";
+          let statusText = "Menunggu Penjemputan";
+          let statusCls = "pending";
+          let statusIcon = "clock";
+          
+          if (p.status === "in_transit") {
+            progressWidth = "50%";
+            statusText = "Diantar ke Galeri ECOPILAH";
+            statusCls = "in_transit";
+            statusIcon = "truck";
+          } else if (p.status === "completed") {
+            progressWidth = "100%";
+            statusText = "Selesai & Verified";
+            statusCls = "completed";
+            statusIcon = "check-circle-2";
+          }
+
+          return `
+            <div class="pickup-card">
+              <div class="pickup-header">
+                <div>
+                  <div class="pickup-title">Setoran ${p.type} (${p.weight} kg) — <span style="font-weight:600;color:var(--text-muted);">${p.id}</span></div>
+                  <div class="pickup-sub">
+                    <i data-lucide="user" style="width:14px;height:14px;"></i> ${p.officer} &bull; ${p.date}
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span class="status-pill ${statusCls}">
+                    <i data-lucide="${statusIcon}" style="width:14px;height:14px;"></i>
+                    ${statusText}
+                  </span>
+                </div>
+              </div>
+
+              <div class="pickup-stepper-wrap">
+                <div class="pickup-stepper">
+                  <div class="pickup-stepper-line"></div>
+                  <div class="pickup-stepper-progress" style="width: ${progressWidth};"></div>
+                  
+                  <div class="step-node ${p.status === 'pending' ? 'current' : 'active'}">
+                    <div class="step-circle"><i data-lucide="calendar" style="width:16px;height:16px;"></i></div>
+                    <div class="step-label">Jadwal Penjemputan</div>
+                  </div>
+                  
+                  <div class="step-node ${p.status === 'in_transit' ? 'current' : (p.status === 'completed' ? 'active' : '')}">
+                    <div class="step-circle"><i data-lucide="truck" style="width:16px;height:16px;"></i></div>
+                    <div class="step-label">Diantar ke Galeri ECOPILAH</div>
+                  </div>
+
+                  <div class="step-node ${p.status === 'completed' ? 'active' : ''}">
+                    <div class="step-circle"><i data-lucide="check-check" style="width:16px;height:16px;"></i></div>
+                    <div class="step-label">Verified <br />(+${p.points} Poin)</div>
+                  </div>
+                </div>
+              </div>
+
+              ${p.notes ? `
+                <div style="margin-top: 1.25rem; padding: 10px 14px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); font-size: 0.84rem; color: #1e40af; display: flex; align-items: flex-start; gap: 8px;">
+                  <i data-lucide="message-square-quote" style="width: 18px; height: 18px; flex-shrink: 0; color: #2563eb; margin-top: 2px;"></i>
+                  <div>
+                    <strong style="color: #1d4ed8;">Catatan Verifikasi Petugas:</strong>
+                    <div style="margin-top: 2px; color: #1e3a8a; font-style: italic;">"${p.notes}"</div>
+                  </div>
+                </div>
+              ` : ''}
+
+              ${p.status !== 'completed' ? `
+                <div style="margin-top: 1.25rem; pt: 0.75rem; border-top: 1px dashed var(--border); display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size:0.78rem;color:var(--text-muted);">Switch ke akun Petugas Ecopilah untuk simulasi pengambilan.</span>
+                  <button class="btn btn-ghost" style="font-size:0.78rem;padding:6px 12px;" onclick="advancePickupStatus('${p.id}')">
+                    <i data-lucide="fast-forward" style="width:14px;height:14px;"></i> Simulasi Warga &rarr;
+                  </button>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('');
+        lucide.createIcons();
+      }
+
+      function advancePickupStatus(pickupId) {
+        updatePetugasTaskStatus(pickupId, null);
+      }
+
+      // --- LOGIKA PETUGAS PORTAL ---
+      function updatePetugasDashboardUI() {
+        if (!currentUser) return;
+        document.getElementById("petugas-name").innerText = currentUser.name;
+        document.getElementById("petugas-avatar").innerText = currentUser.name.charAt(0).toUpperCase();
+        
+        const pickups = getGlobalPickups();
+        const pendingCount = pickups.filter(p => p.status === 'pending').length;
+        const transitCount = pickups.filter(p => p.status === 'in_transit').length;
+        const doneCount    = pickups.filter(p => p.status === 'completed').length;
+
+        document.getElementById("stat-petugas-total").innerText = pickups.length;
+        document.getElementById("stat-petugas-pending").innerText = pendingCount;
+        document.getElementById("stat-petugas-transit").innerText = transitCount;
+        document.getElementById("stat-petugas-done").innerText = doneCount;
+
+        renderPetugasTasks();
+      }
+
+      function filterPetugasTasks(status) {
+        petugasTaskFilter = status;
+        document.querySelectorAll('#btn-filter-all, #btn-filter-pending, #btn-filter-transit').forEach(b => {
+          b.className = 'btn btn-ghost';
+        });
+        document.getElementById(`btn-filter-${status === 'in_transit' ? 'transit' : status}`).className = 'btn btn-primary';
+        renderPetugasTasks();
+      }
+
+      function renderPetugasTasks() {
+        const list = document.getElementById("petugas-task-list");
+        let pickups = getGlobalPickups();
+
+        if (petugasTaskFilter !== 'all') {
+          pickups = pickups.filter(p => p.status === petugasTaskFilter);
+        }
+
+        if (pickups.length === 0) {
+          list.innerHTML = `<div class="card" style="padding:2rem;text-align:center;color:var(--text-muted);">Tidak ada penjemputan sampah pada kategori ini.</div>`;
+          return;
+        }
+
+        list.innerHTML = pickups.map(p => {
+          let statusText = "Menunggu Penjemputan Rumah";
+          let statusCls = "pending";
+          let statusIcon = "clock";
+          
+          if (p.status === "in_transit") {
+            statusText = "Sedang Diantar ke Galeri ECOPILAH";
+            statusCls = "in_transit";
+            statusIcon = "truck";
+          } else if (p.status === "completed") {
+            statusText = "Selesai & Verified";
+            statusCls = "completed";
+            statusIcon = "check-circle-2";
+          }
+
+          return `
+            <div class="task-card">
+              <div class="task-header">
+                <div>
+                  <div class="task-resident-name">${p.residentName} &bull; <span style="font-size:0.85rem;color:var(--text-muted);">${p.id}</span></div>
+                  <div class="task-address">
+                    <i data-lucide="map-pin" style="width:14px;height:14px;color:var(--primary);"></i>
+                    ${p.address || 'Jl. A. Yani Km 4.5, Banjarmasin'}
+                  </div>
+                </div>
+                <span class="status-pill ${statusCls}">
+                  <i data-lucide="${statusIcon}" style="width:14px;height:14px;"></i>
+                  ${statusText}
+                </span>
+              </div>
+
+              <div class="task-details">
+                <div class="task-chip">
+                  <i data-lucide="package" style="width:14px;height:14px;color:var(--primary);"></i>
+                  Jenis: ${p.type}
+                </div>
+                <div class="task-chip">
+                  <i data-lucide="scale" style="width:14px;height:14px;color:var(--primary);"></i>
+                  Berat: ${p.weight} kg
+                </div>
+                <div class="task-chip">
+                  <i data-lucide="coins" style="width:14px;height:14px;color:#16a34a;"></i>
+                  Nilai: +${p.points} Poin Warga
+                </div>
+                <div class="task-chip">
+                  <i data-lucide="phone" style="width:14px;height:14px;color:var(--text-muted);"></i>
+                  ${p.phone || '0812-3456-7890'}
+                </div>
+              </div>
+
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;padding-top:0.5rem;border-top:1px solid var(--gray-100);">
+                <div style="font-size:0.8rem;color:var(--text-muted);">
+                  Petugas Ditugaskan: <strong>${p.officer}</strong>
+                </div>
+
+                <div>
+                  ${p.status === 'pending' ? `
+                    <button class="btn btn-primary" style="font-size:0.85rem;padding:8px 16px;" onclick="updatePetugasTaskStatus('${p.id}', 'in_transit')">
+                      <i data-lucide="truck" style="width:16px;height:16px;"></i>
+                      🚚 Ambil Sampah dari Rumah Warga
+                    </button>
+                  ` : ''}
+
+                  ${p.status === 'in_transit' ? `
+                    <button class="btn btn-primary" style="font-size:0.85rem;padding:8px 16px;background:#2563eb;" onclick="openPetugasVerifyModal('${p.id}')">
+                      <i data-lucide="scale" style="width:16px;height:16px;"></i>
+                      ⚖️ Timbang & Verifikasi Poin
+                    </button>
+                  ` : ''}
+
+                  ${p.status === 'completed' ? `
+                    <span class="badge-pill hijau" style="padding:6px 14px;">
+                      <i data-lucide="check-check" style="width:14px;height:14px;"></i>
+                      Verified <br />(+${p.points} Poin Terkirim)
+                    </span>
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+        lucide.createIcons();
+      }
+
+      let activeVerifyPickup = null;
+
+      function openPetugasVerifyModal(pickupId) {
+        const pickups = getGlobalPickups();
+        const pickup = pickups.find(p => p.id === pickupId);
+        if (!pickup) return;
+
+        activeVerifyPickup = pickup;
+        document.getElementById("pv-pickup-id").value = pickup.id;
+        document.getElementById("pv-resident-name").innerText = `${pickup.residentName} (${pickup.id})`;
+        document.getElementById("pv-waste-type").innerText = pickup.type;
+        document.getElementById("pv-estimated-info").innerText = `${pickup.weight} kg (Estimasi: ${pickup.points} Poin)`;
+        
+        let typeKey = (pickup.type || "organik").toLowerCase();
+        if (typeKey.includes("anorganik")) typeKey = "anorganik";
+        else if (typeKey.includes("jelantah")) typeKey = "jelantah";
+        else if (typeKey.includes("b3")) typeKey = "b3";
+        else typeKey = "organik";
+
+        const rate = WASTE_RATES[typeKey] || 30;
+        document.getElementById("pv-rate-badge").innerText = `${rate} Poin / kg`;
+
+        document.getElementById("pv-actual-weight").value = pickup.weight;
+        document.getElementById("pv-notes").value = pickup.notes || "";
+
+        recalcPetugasVerifyPoints();
+
+        document.getElementById("petugas-verify-modal").classList.add("active");
+        lucide.createIcons();
+      }
+
+      function closePetugasVerifyModal() {
+        document.getElementById("petugas-verify-modal").classList.remove("active");
+        activeVerifyPickup = null;
+      }
+
+      function recalcPetugasVerifyPoints() {
+        if (!activeVerifyPickup) return;
+        let typeKey = (activeVerifyPickup.type || "organik").toLowerCase();
+        if (typeKey.includes("anorganik")) typeKey = "anorganik";
+        else if (typeKey.includes("jelantah")) typeKey = "jelantah";
+        else if (typeKey.includes("b3")) typeKey = "b3";
+        else typeKey = "organik";
+
+        const rate = WASTE_RATES[typeKey] || 30;
+        const inputVal = parseFloat(document.getElementById("pv-actual-weight").value);
+        const actualWeight = isNaN(inputVal) || inputVal <= 0 ? 0 : inputVal;
+        const newPoints = Math.floor(actualWeight * rate);
+
+        document.getElementById("pv-calculated-points").innerText = `${newPoints.toLocaleString('id-ID')} Poin`;
+
+        const diffEl = document.getElementById("pv-diff-note");
+        const origPts = activeVerifyPickup.points || 0;
+        if (newPoints > origPts) {
+          diffEl.innerHTML = `<span style="color: #16a34a; font-weight: 700;">📈 Poin bertambah +${(newPoints - origPts).toLocaleString('id-ID')} poin (Timbangan warga bertambah +${(actualWeight - activeVerifyPickup.weight).toFixed(1)}kg)</span>`;
+        } else if (newPoints < origPts) {
+          diffEl.innerHTML = `<span style="color: #d97706; font-weight: 700;">📉 Poin berkurang -${(origPts - newPoints).toLocaleString('id-ID')} poin (Penyesuaian timbangan -${(activeVerifyPickup.weight - actualWeight).toFixed(1)}kg)</span>`;
+        } else {
+          diffEl.innerHTML = `<span style="color: var(--text-muted);">✅ Sesuai dengan estimasi awal warga</span>`;
+        }
+      }
+
+      function confirmPetugasVerification() {
+        if (!activeVerifyPickup) return;
+        const inputVal = parseFloat(document.getElementById("pv-actual-weight").value);
+        if (isNaN(inputVal) || inputVal <= 0) {
+          showToast("Masukkan berat timbangan yang valid!", "error");
+          return;
+        }
+
+        const notes = document.getElementById("pv-notes").value.trim();
+        const pickupId = activeVerifyPickup.id;
+
+        updatePetugasTaskStatus(pickupId, 'completed', inputVal, notes);
+        closePetugasVerifyModal();
+      }
+
+      function updatePetugasTaskStatus(pickupId, nextStatus, customWeight, customNotes) {
+        const pickups = getGlobalPickups();
+        const pickup = pickups.find(p => p.id === pickupId);
+        if (!pickup) return;
+
+        let targetStatus = nextStatus;
+        if (!targetStatus) {
+          if (pickup.status === 'pending') targetStatus = 'in_transit';
+          else if (pickup.status === 'in_transit') targetStatus = 'completed';
+        }
+
+        pickup.status = targetStatus;
+        pickup.officer = currentUser ? `${currentUser.name} (Petugas ECOPILAH)` : "Bambang S. (Petugas ECOPILAH)";
+
+        if (targetStatus === 'in_transit') {
+          showToast(`🚚 Sampah ${pickup.type} (${pickup.weight}kg) berhasil diambil dari rumah ${pickup.residentName}!`);
+        } else if (targetStatus === 'completed') {
+          // If custom weight is provided from scale verification
+          if (customWeight !== undefined && customWeight > 0) {
+            let typeKey = (pickup.type || "organik").toLowerCase();
+            if (typeKey.includes("anorganik")) typeKey = "anorganik";
+            else if (typeKey.includes("jelantah")) typeKey = "jelantah";
+            else if (typeKey.includes("b3")) typeKey = "b3";
+            else typeKey = "organik";
+
+            const rate = WASTE_RATES[typeKey] || 30;
+            pickup.weight = customWeight;
+            pickup.points = Math.floor(customWeight * rate);
+          }
+          if (customNotes) {
+            pickup.notes = customNotes;
+          }
+
+          // Award points to resident in Cloud and DB
+          const resEmail = pickup.residentEmail || (pickup.residentName ? `${pickup.residentName.toLowerCase()}@gmail.com` : "ahmad@demo.com");
+          const resDocId = resEmail.toLowerCase().replace(/[^a-zA-Z0-9]/g, "_");
+          const historyDesc = customNotes 
+            ? `Setoran ${pickup.type} (${pickup.weight}kg) — Catatan: "${customNotes}"`
+            : `Setoran ${pickup.type} (${pickup.weight}kg) — Verified Aktual`;
+
+          // Sync points directly to Firestore
+          if (firestoreDB) {
+            firestoreDB.collection("users").doc(resDocId).get().then(doc => {
+              if (doc.exists) {
+                const data = doc.data();
+                const newPts = (data.points || 0) + pickup.points;
+                const hist = data.history || [];
+                hist.unshift({
+                  date: new Date().toISOString().split("T")[0],
+                  desc: historyDesc,
+                  points: pickup.points
+                });
+                firestoreDB.collection("users").doc(resDocId).set({ points: newPts, history: hist }, { merge: true });
+              }
+            }).catch(e => console.warn("Cloud point award error:", e));
+          }
+
+          const db = getUsersDB();
+          const resUser = db.find(u => u.name.toLowerCase() === pickup.residentName.toLowerCase() || (u.email && u.email.toLowerCase() === resEmail.toLowerCase()));
+          if (resUser) {
+            resUser.points = (resUser.points || 0) + pickup.points;
+            resUser.history = resUser.history || [];
+            resUser.history.unshift({
+              date: new Date().toISOString().split("T")[0],
+              desc: historyDesc,
+              points: pickup.points
+            });
+            saveUserToDB(resUser);
+            if (currentUser && (currentUser.email === resUser.email || currentUser.name.toLowerCase() === resUser.name.toLowerCase())) {
+              currentUser = resUser;
+              localStorage.setItem("ECOPILAH_session", JSON.stringify(currentUser));
+              sessionStorage.setItem("ECOPILAH_session", JSON.stringify(currentUser));
+            }
+          }
+
+          // Update Leaderboard
+          const lbIdx = MOCK_LEADERBOARD.findIndex(u => u.name === pickup.residentName);
+          if (lbIdx !== -1) {
+            MOCK_LEADERBOARD[lbIdx].points += pickup.points;
+          }
+          renderLeaderboard();
+
+          showToast(`🎉 Verified! Berat aktual ${pickup.weight}kg (+${pickup.points} Poin) telah dikonfirmasi untuk ${pickup.residentName}.`, 'success');
+        }
+
+        saveGlobalPickups(pickups);
+        syncPickupsToCloud(pickup);
+
+        if (currentUser && currentUser.role === 'petugas') {
+          updatePetugasDashboardUI();
+        } else {
+          updateDashboardUI();
+        }
+      }
+
+      // --- SETORAN & SELEKSI SAMPAH ---
+      function selectWaste(type) {
+        selectedWasteType = type;
+        document
+          .querySelectorAll(".waste-card")
+          .forEach((c) => c.classList.remove("selected"));
+        const card = document.getElementById(`card-${type}`);
+        if (card) card.classList.add("selected");
+        updateSetoranUI();
+      }
+
+      function clampWeight() {
+        const input = document.getElementById("weight-display");
+        if (!input) return;
+        let val = parseFloat(input.value);
+        if (isNaN(val) || val < 0.1) val = 0.1;
+        if (val > 1000) val = 1000;
+        val = Math.round(val * 10) / 10;
+        input.value = val.toFixed(1);
+        currentWeight = val;
+        updateSetoranUI();
+      }
+
+      function updateSetoranUI() {
+        const input = document.getElementById("weight-display");
+        if (input) {
+          const val = parseFloat(input.value);
+          currentWeight = isNaN(val) || val < 0 ? 0 : val;
+        }
+        const rate = selectedWasteType && WASTE_RATES[selectedWasteType] ? WASTE_RATES[selectedWasteType] : 0;
+        const pts = Math.floor(currentWeight * rate);
+        const ptsEl = document.getElementById("calc-points");
+        if (ptsEl) ptsEl.innerText = pts.toLocaleString("id-ID");
+      }
+
+      function submitSetoran() {
+        if (!selectedWasteType) {
+          showToast("Pilih jenis sampah terlebih dahulu!", "error");
+          return;
+        }
+
+        const address = document.getElementById("pickup-address") ? document.getElementById("pickup-address").value.trim() : "";
+        const phone = document.getElementById("pickup-phone") ? document.getElementById("pickup-phone").value.trim() : "";
+
+        if (!address) {
+          showToast("Mohon masukkan alamat penjemputan!", "error");
+          if (document.getElementById("pickup-address")) document.getElementById("pickup-address").focus();
+          return;
+        }
+
+        if (!phone) {
+          showToast("Mohon masukkan nomor WhatsApp/telepon aktif!", "error");
+          if (document.getElementById("pickup-phone")) document.getElementById("pickup-phone").focus();
+          return;
+        }
+
+        // Save address & phone to current user profile for convenience
+        if (currentUser) {
+          currentUser.address = address;
+          currentUser.phone = phone;
+          saveUserToDB(currentUser);
+        }
+
+        const pts = Math.floor(currentWeight * WASTE_RATES[selectedWasteType]);
+        let typeName = selectedWasteType.charAt(0).toUpperCase() + selectedWasteType.slice(1);
+        if (selectedWasteType === 'jelanta' || selectedWasteType === 'Jelantah') typeName = 'Minyak Jelantah';
+
+        const globalPickups = getGlobalPickups();
+
+        const newPickup = {
+          id: "PKP-" + Math.floor(1000 + Math.random() * 9000),
+          residentName: currentUser ? currentUser.name : "Ahmad Fauzi",
+          residentEmail: currentUser ? currentUser.email : "ahmad@demo.com",
+          address: address,
+          phone: phone,
+          type: typeName,
+          weight: currentWeight,
+          points: pts,
+          date: new Date().toLocaleString("id-ID", { dateStyle: "short", timeStyle: "short" }),
+          status: "pending",
+          officer: "Belum Ditugaskan"
+        };
+
+        globalPickups.unshift(newPickup);
+        saveGlobalPickups(globalPickups);
+        syncPickupsToCloud(newPickup);
+
+        showToast(`🚚 Tiket ${newPickup.id} berhasil dibuat! Kurir akan menjemput ke alamat Anda.`);
+        navigateTo("dashboard");
+      }
+
+      // --- LEADERBOARD ---
+      function renderLeaderboard() {
+        const sorted = [...MOCK_LEADERBOARD].sort(
+          (a, b) => b.points - a.points,
+        );
+        const rankIcons = ["#", "2", "3"];
+        document.getElementById("lb-container").innerHTML = sorted
+          .map((u, i) => {
+            const n = i + 1;
+            const cls = n === 1 ? "r1" : n === 2 ? "r2" : n === 3 ? "r3" : "rn";
+            const lbl =
+              n <= 3
+                ? `<i data-lucide="trophy" style="width:16px;height:16px;"></i>`
+                : n;
+            const isMe = currentUser && u.name === currentUser.name;
+            const badge = getBadgeInfo(u.points);
+            return `
+          <div class="card lb-item ${isMe ? "current-user" : ""}">
+            <div class="rank-badge ${cls}">${lbl}</div>
+            <div class="lb-avatar">${u.name.charAt(0)}</div>
+            <div class="lb-info">
+              <h4>${u.name}${isMe ? ' <span style="color:var(--primary);font-size:.75rem;">(Kamu)</span>' : ""}</h4>
+              <span>${badge.name}</span>
+            </div>
+            <div class="lb-pts">${u.points.toLocaleString("id-ID")} pts</div>
+          </div>
+        `;
+          })
+          .join("");
+        lucide.createIcons();
+      }
+
+      // --- REWARDS ---
+      function renderRewards() {
+        document.getElementById("rewards-container").innerHTML = REWARDS.map(
+          (r) => `
+        <div class="card reward-card">
+          <div class="reward-icon-wrap">
+            <i data-lucide="${r.icon}" style="width:30px;height:30px;"></i>
+          </div>
+          <h4>${r.name}</h4>
+          <div class="reward-cost">
+            <i data-lucide="coins" style="width:14px;height:14px;"></i>
+            ${r.cost.toLocaleString("id-ID")} Poin
+          </div>
+          <button class="btn btn-primary" onclick="tukarPoin(${r.id})">Tukar Sekarang</button>
+        </div>
+      `,
+        ).join("");
+        lucide.createIcons();
+      }
+
+      function tukarPoin(id) {
+        const r = REWARDS.find((r) => r.id === id);
+        if (!r) return;
+        if (currentUser.points < r.cost) {
+          showToast(
+            `Poin tidak cukup. Kurang ${(r.cost - currentUser.points).toLocaleString("id-ID")} poin lagi.`,
+            "error",
+          );
+          return;
+        }
+        if (
+          confirm(
+            `Yakin ingin menukar ${r.cost.toLocaleString("id-ID")} poin dengan ${r.name}?`,
+          )
+        ) {
+          currentUser.points -= r.cost;
+          currentUser.history = currentUser.history || [];
+          currentUser.history.unshift({
+            date: new Date().toISOString().split("T")[0],
+            desc: `Tukar: ${r.name}`,
+            points: -r.cost,
+          });
+          saveUserToDB(currentUser);
+          localStorage.setItem("ECOPILAH_session", JSON.stringify(currentUser));
+          sessionStorage.setItem("ECOPILAH_session", JSON.stringify(currentUser));
+          const lbIdx = MOCK_LEADERBOARD.findIndex(
+            (u) => u.name === currentUser.name,
+          );
+          if (lbIdx !== -1) MOCK_LEADERBOARD[lbIdx].points = currentUser.points;
+          renderLeaderboard();
+          document.getElementById("tukar-points-display").innerText =
+            `${currentUser.points} Poin`;
+          showToast(
+            `Berhasil menukar ${r.name}! Silakan ambil di Galeri ECOPILAH.`,
+          );
+        }
+      }
+      // --- MARKETPLACE ---
+      const MARKETPLACE_PRODUCTS = [
+        {
+          id: 'mp-1', name: 'Kompos Organik Premium', category: 'kompos', price: 25000,
+          icon: 'leaf', badge: 'bestseller', badgeLabel: 'Bestseller',
+          desc: 'Kompos organik berkualitas tinggi dari limbah dapur & kebun warga Banjarmasin. Cocok untuk tanaman hias, sayuran, dan buah-buahan. Diperkaya dengan mikroorganisme tanah.',
+          weight: '2 kg'
+        },
+        {
+          id: 'mp-2', name: 'Pupuk Cair Organik', category: 'kompos', price: 30000,
+          icon: 'droplets', badge: 'eco', badgeLabel: '100% Organik',
+          desc: 'Pupuk cair dari fermentasi limbah organik. Kaya nitrogen, fosfor, dan kalium alami. Sempurna untuk menyuburkan tanaman dengan cara ramah lingkungan.',
+          weight: '1 Liter'
+        },
+        {
+          id: 'mp-3', name: 'Sofa Ecobrick 2-Seater', category: 'ecobrick', price: 750000,
+          icon: 'sofa', badge: 'new', badgeLabel: 'Custom Order',
+          desc: 'Sofa 2 dudukan kokoh dari ecobrick (botol plastik diisi padat). Desain modern, rangka kayu ulin Kalimantan. Bisa custom warna & ukuran. Proses pembuatan 7-14 hari kerja.',
+          weight: 'Custom'
+        },
+        {
+          id: 'mp-4', name: 'Meja Ecobrick', category: 'ecobrick', price: 500000,
+          icon: 'table', badge: 'new', badgeLabel: 'Custom Order',
+          desc: 'Meja serbaguna berbahan dasar ecobrick dengan top table kayu. Kokoh, tahan lama, dan ramah lingkungan. Tersedia ukuran 60x60cm dan 80x80cm.',
+          weight: 'Custom'
+        },
+        {
+          id: 'mp-5', name: 'Tatakan Gelas Plastik Daur Ulang', category: 'kerajinan', price: 45000,
+          icon: 'circle-dot', badge: 'bestseller', badgeLabel: 'Bestseller',
+          desc: 'Set 4 tatakan gelas cantik dari plastik daur ulang yang dilelehkan & dicetak. Motif marmer warna-warni. Tahan panas hingga 80°C, food grade.',
+          weight: 'Set 4 pcs'
+        },
+        {
+          id: 'mp-6', name: 'Pot Bunga Plastik Daur Ulang', category: 'kerajinan', price: 30000,
+          icon: 'flower-2', badge: 'eco', badgeLabel: 'Eco-Friendly',
+          desc: 'Pot bunga estetik dari plastik daur ulang. Tersedia berbagai ukuran dan warna pastel. Ringan namun tahan cuaca, cocok untuk indoor & outdoor.',
+          weight: 'Medium'
+        },
+        {
+          id: 'mp-7', name: 'Tas Belanja Daur Ulang', category: 'kerajinan', price: 40000,
+          icon: 'shopping-bag', badge: 'eco', badgeLabel: 'Eco-Friendly',
+          desc: 'Tas belanja kuat dari anyaman plastik daur ulang. Tahan air, bisa dicuci. Kurangi penggunaan kantong plastik sekali pakai! Kapasitas hingga 10kg.',
+          weight: '1 pcs'
+        },
+        {
+          id: 'mp-8', name: 'Vas Bunga Kerajinan Plastik', category: 'kerajinan', price: 55000,
+          icon: 'paintbrush', badge: 'new', badgeLabel: 'New Arrival',
+          desc: 'Vas bunga artistik handmade dari plastik daur ulang. Dibuat oleh pengrajin lokal Banjarmasin. Setiap produk unik karena dibuat manual dengan sentuhan seni.',
+          weight: '1 pcs'
+        }
+      ];
+
+      let mpFilter = 'all';
+      let selectedProduct = null;
+
+      function renderMarketplace() {
+        const grid = document.getElementById('marketplace-grid');
+        if (!grid) return;
+        const filtered = mpFilter === 'all' ? MARKETPLACE_PRODUCTS : MARKETPLACE_PRODUCTS.filter(p => p.category === mpFilter);
+
+        grid.innerHTML = filtered.map(p => `
+          <div class="card product-card" onclick="openProductModal('${p.id}')">
+            <div class="product-img">
+              <i data-lucide="${p.icon}" class="product-icon"></i>
+              <span class="product-badge ${p.badge}">${p.badgeLabel}</span>
+            </div>
+            <div class="product-info">
+              <div class="product-category">${p.category === 'kompos' ? 'Kompos & Pupuk' : p.category === 'ecobrick' ? 'Furnitur Ecobrick' : 'Kerajinan Plastik'}</div>
+              <h4>${p.name}</h4>
+              <p class="product-desc">${p.desc.substring(0, 70)}...</p>
+              <div class="product-price-row">
+                <div class="product-price">Rp ${p.price.toLocaleString('id-ID')} <span>/ ${p.weight}</span></div>
+              </div>
+            </div>
+          </div>
+        `).join('');
+        lucide.createIcons();
+      }
+
+      function filterProducts(cat) {
+        mpFilter = cat;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+        renderMarketplace();
+      }
+
+      function openProductModal(id) {
+        selectedProduct = MARKETPLACE_PRODUCTS.find(p => p.id === id);
+        if (!selectedProduct) return;
+        const modal = document.getElementById('product-modal');
+        document.getElementById('pm-cat').innerText = selectedProduct.category === 'kompos' ? 'Kompos & Pupuk' : selectedProduct.category === 'ecobrick' ? 'Furnitur Ecobrick' : 'Kerajinan Plastik';
+        document.getElementById('pm-name').innerText = selectedProduct.name;
+        document.getElementById('pm-desc').innerText = selectedProduct.desc;
+        document.getElementById('pm-price').innerText = 'Rp ' + selectedProduct.price.toLocaleString('id-ID') + ' / ' + selectedProduct.weight;
+        document.getElementById('pm-img').innerHTML = '<i data-lucide="' + selectedProduct.icon + '" style="width: 80px; height: 80px; opacity: 0.5;"></i>';
+        lucide.createIcons({ nodes: [document.getElementById('pm-img')] });
+        modal.classList.add('active');
+      }
+
+      function closeProductModal() {
+        document.getElementById('product-modal').classList.remove('active');
+        selectedProduct = null;
+      }
+
+      function orderProduct() {
+        if (!selectedProduct) return;
+        const msg = encodeURIComponent('Halo ECOPILAH! Saya ingin memesan:\n\n*'+ selectedProduct.name +'*\nHarga: Rp ' + selectedProduct.price.toLocaleString('id-ID') + '\nBerat/Ukuran: ' + selectedProduct.weight + '\n\nMohon info ketersediaan dan cara pembayarannya. Terima kasih!');
+        window.open('https://wa.me/6281212121212?text=' + msg, '_blank');
+        closeProductModal();
+        showToast('Mengarahkan ke WhatsApp untuk pemesanan...');
+      }
+
+      // Click outside modal to close
+      document.getElementById('product-modal').addEventListener('click', function(e) {
+        if (e.target === this) closeProductModal();
+      });
+
+      window.onload = init;
+    </script>
+  </body>
+</html>
