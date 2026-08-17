@@ -3012,19 +3012,25 @@
               area: "Banjarmasin Tengah & Timur"
             };
           } else {
-            // First check local DB
-            user = findUserInDB(email);
-
-            // Fetch from Firestore Cloud if available
+            // Check Firestore Cloud directly
             if (firestoreDB) {
               try {
                 const docSnap = await firestoreDB.collection("users").doc(userDocId).get();
                 if (docSnap.exists) {
                   user = docSnap.data();
+                  saveUserToDB(user);
+                } else {
+                  // If deleted in Firestore, remove from local cache too
+                  user = null;
+                  const db = getUsersDB().filter(u => u.email.toLowerCase() !== email.toLowerCase());
+                  localStorage.setItem("ECOPILAH_users_db", JSON.stringify(db));
                 }
               } catch (err) {
                 console.warn("Firestore fetch user error:", err);
+                user = findUserInDB(email);
               }
+            } else {
+              user = findUserInDB(email);
             }
 
             if (!user) {
@@ -3058,17 +3064,24 @@
             return;
           }
 
-          // Check if email is already registered locally or in Firestore
-          let existingUser = findUserInDB(email);
+          // Check if email is already registered in Firestore Cloud
+          let existingUser = null;
           if (firestoreDB) {
             try {
               const docSnap = await firestoreDB.collection("users").doc(userDocId).get();
               if (docSnap.exists) {
                 existingUser = docSnap.data();
+              } else {
+                // If deleted from Firestore, prune stale local storage
+                const db = getUsersDB().filter(u => u.email.toLowerCase() !== email.toLowerCase());
+                localStorage.setItem("ECOPILAH_users_db", JSON.stringify(db));
               }
             } catch (err) {
               console.warn("Firestore check duplicate email error:", err);
+              existingUser = findUserInDB(email);
             }
+          } else {
+            existingUser = findUserInDB(email);
           }
 
           if (existingUser || email === "bambang@petugas.com" || email === "ahmad@demo.com") {
