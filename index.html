@@ -2747,28 +2747,26 @@
       function seedInitialCloudData() {
         if (!firestoreDB) return;
         try {
-          // Seed initial user Ahmad Fauzi
+          // Seed Demo Warga (Ahmad Fauzi)
           firestoreDB.collection("users").doc("ahmad_demo_com").set({
             name: "Ahmad Fauzi",
             email: "ahmad@demo.com",
             password: "password123",
             role: "warga",
             points: 2450,
-            history: [
-              { date: "2026-08-15", desc: "Setoran Organik (10kg)", points: 300 }
-            ]
+            history: []
           }, { merge: true });
 
-          // Seed default pickups
-          const defaultPickups = [
-            { id: "PKP-1042", residentName: "Ahmad Fauzi", address: "Jl. A. Yani Km 4.5", type: "Minyak Jelantah", weight: 3.0, points: 60, date: "2026-08-15 10:45", status: "in_transit", officer: "Bambang S. (Ecopilah)", phone: "0812-3456-7890" },
-            { id: "PKP-1043", residentName: "Siti Aminah", address: "Jl. Lambung Mangkurat No. 88", type: "Anorganik", weight: 6.5, points: 325, date: "2026-08-15 11:00", status: "pending", officer: "Belum Ditugaskan", phone: "0852-9876-5432" },
-            { id: "PKP-1044", residentName: "Budi Santoso", address: "Jl. Sultan Adam No. 24", type: "Organik", weight: 12.0, points: 360, date: "2026-08-15 09:30", status: "pending", officer: "Belum Ditugaskan", phone: "0813-5555-1234" }
-          ];
+          // Seed Demo Petugas (Bambang S.)
+          firestoreDB.collection("users").doc("bambang_petugas_com").set({
+            name: "Bambang S.",
+            email: "bambang@petugas.com",
+            password: "password123",
+            role: "petugas",
+            area: "Banjarmasin Tengah & Timur"
+          }, { merge: true });
 
-          defaultPickups.forEach(p => {
-            firestoreDB.collection("pickups").doc(p.id).set(p, { merge: true });
-          });
+          console.log("ECOPILAH: Demo Accounts verified in Cloud DB.");
         } catch (e) {
           console.warn("Cloud seed error:", e);
         }
@@ -2778,15 +2776,15 @@
         if (!firestoreDB) return;
         try {
           firestoreDB.collection("pickups").onSnapshot((snapshot) => {
+            const cloudPickups = [];
             if (!snapshot.empty) {
-              const cloudPickups = [];
               snapshot.forEach((doc) => cloudPickups.push(doc.data()));
               cloudPickups.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-              saveGlobalPickups(cloudPickups);
-              if (currentUser) {
-                if (currentUser.role === 'petugas') updatePetugasDashboardUI();
-                else updateDashboardUI();
-              }
+            }
+            saveGlobalPickups(cloudPickups);
+            if (currentUser) {
+              if (currentUser.role === 'petugas') updatePetugasDashboardUI();
+              else updateDashboardUI();
             }
           }, (err) => console.log("Firestore offline/waiting:", err));
         } catch (e) {
@@ -2818,12 +2816,17 @@
       }
 
       function init() {
+        // Clean initial state: No mock pickups
         if (!localStorage.getItem("ECOPILAH_global_pickups")) {
-          saveGlobalPickups([
-            { id: "PKP-1001", residentName: "Ahmad Fauzi", residentEmail: "ahmad@demo.com", address: "Jl. Lambung Mangkurat No. 12, Banjarmasin Tengah", type: "Minyak Jelantah", weight: 3.0, points: 60, date: "2026-08-15 10:45", status: "in_transit", officer: "Bambang S. (Ecopilah)", phone: "0812-3456-7890" },
-            { id: "PKP-2001", residentName: "Siti Aminah", residentEmail: "siti@demo.com", address: "Jl. Kelayan B No. 88, Banjarmasin Selatan", type: "Anorganik", weight: 6.5, points: 325, date: "2026-08-15 11:00", status: "pending", officer: "Belum Ditugaskan", phone: "0852-9876-5432" },
-            { id: "PKP-3001", residentName: "Budi Santoso", residentEmail: "budi@demo.com", address: "Jl. Sultan Adam No. 24, Banjarmasin Timur", type: "Organik", weight: 12.0, points: 360, date: "2026-08-15 09:30", status: "pending", officer: "Belum Ditugaskan", phone: "0813-5555-1234" }
-          ]);
+          saveGlobalPickups([]);
+        }
+
+        // Clean user database with demo accounts only
+        if (!localStorage.getItem("ECOPILAH_users_db")) {
+          localStorage.setItem("ECOPILAH_users_db", JSON.stringify([
+            { name: "Ahmad Fauzi", email: "ahmad@demo.com", password: "password123", role: "warga", points: 2450, history: [] },
+            { name: "Bambang S.", email: "bambang@petugas.com", password: "password123", role: "petugas", area: "Banjarmasin" }
+          ]));
         }
 
         renderLeaderboard();
