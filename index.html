@@ -2976,6 +2976,11 @@
         const password = document.getElementById("auth-password").value;
         const userDocId = email.replace(/[^a-zA-Z0-9]/g, "_");
 
+        if (!email || !password) {
+          showToast("Mohon isi email dan password!", "error");
+          return;
+        }
+
         if (authMode === "login") {
           let user = null;
           if (email === "bambang@petugas.com") {
@@ -2986,6 +2991,7 @@
             user = {
               name: "Bambang S.",
               email: "bambang@petugas.com",
+              password: "password123",
               role: "petugas",
               area: "Banjarmasin Tengah & Timur"
             };
@@ -3010,14 +3016,22 @@
               return;
             }
 
-            // Verify password
-            if (user.password && user.password !== password) {
-              showToast("Password atau email salah!", "error");
-              return;
-            }
-            if (!user.password && email === "ahmad@demo.com" && password !== "password123") {
-              showToast("Password atau email salah!", "error");
-              return;
+            // Strict Password Check
+            const expectedPassword = user.password || (email === "ahmad@demo.com" ? "password123" : null);
+
+            if (expectedPassword) {
+              if (password !== expectedPassword) {
+                showToast("Password atau email salah!", "error");
+                return;
+              }
+            } else {
+              // If legacy account created without password
+              if (password !== "password123") {
+                showToast("Password atau email salah!", "error");
+                return;
+              }
+              user.password = password;
+              saveUserToDB(user);
             }
           }
 
@@ -3032,6 +3046,11 @@
           // --- REGISTRATION MODE ---
           const name = document.getElementById("auth-name").value.trim();
           const role = document.getElementById("auth-role").value;
+
+          if (!name) {
+            showToast("Mohon masukkan nama lengkap Anda!", "error");
+            return;
+          }
 
           // Check if email is already registered locally or in Firestore
           let existingUser = findUserInDB(email);
