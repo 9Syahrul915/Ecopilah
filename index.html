@@ -3530,7 +3530,15 @@
         }
 
         pickup.status = targetStatus;
-        pickup.officer = currentUser ? `${currentUser.name} (Petugas ECOPILAH)` : "Bambang S. (Petugas ECOPILAH)";
+        
+        // Determine Officer Name strictly from Petugas accounts
+        if (currentUser && currentUser.role === 'petugas') {
+          pickup.officer = `${currentUser.name} (Petugas ECOPILAH)`;
+        } else {
+          const officers = getUsersDB().filter(u => u.role === 'petugas');
+          const officerUser = officers.length > 0 ? officers[0] : null;
+          pickup.officer = officerUser ? `${officerUser.name} (Petugas ECOPILAH)` : "Bambang S. (Petugas ECOPILAH)";
+        }
 
         if (targetStatus === 'in_transit') {
           showToast(`🚚 Sampah ${pickup.type} (${pickup.weight}kg) berhasil diambil dari rumah ${pickup.residentName}!`);
