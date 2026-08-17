@@ -2347,6 +2347,19 @@
           </div>
 
           <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label" for="pickup-district" style="font-size: 0.8rem;">
+              Kecamatan / Wilayah Penjemputan <span style="color: var(--red-500)">*</span>
+            </label>
+            <select id="pickup-district" class="form-control" style="font-size: 0.85rem;" required>
+              <option value="1">Banjarmasin Tengah (Format: PKP-1---)</option>
+              <option value="2">Banjarmasin Selatan (Format: PKP-2---)</option>
+              <option value="3" selected>Banjarmasin Timur (Format: PKP-3---)</option>
+              <option value="4">Banjarmasin Barat (Format: PKP-4---)</option>
+              <option value="5">Banjarmasin Utara (Format: PKP-5---)</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
             <label class="form-label" for="pickup-address" style="font-size: 0.8rem;">
               Alamat Lengkap Penjemputan <span style="color: var(--red-500)">*</span>
             </label>
@@ -2807,9 +2820,9 @@
       function init() {
         if (!localStorage.getItem("ECOPILAH_global_pickups")) {
           saveGlobalPickups([
-            { id: "PKP-1042", residentName: "Ahmad Fauzi", residentEmail: "ahmad@demo.com", address: "Jl. A. Yani Km 4.5", type: "Minyak Jelantah", weight: 3.0, points: 60, date: "2026-08-08 10:45", status: "in_transit", officer: "Bambang S. (Ecopilah)", phone: "0812-3456-7890" },
-            { id: "PKP-1043", residentName: "Siti Aminah", residentEmail: "siti@demo.com", address: "Jl. Lambung Mangkurat No. 88", type: "Anorganik", weight: 6.5, points: 162, date: "2026-08-08 11:00", status: "pending", officer: "Belum Ditugaskan", phone: "0852-9876-5432" },
-            { id: "PKP-1044", residentName: "Budi Santoso", residentEmail: "budi@demo.com", address: "Jl. Sultan Adam No. 24", type: "Organik", weight: 12.0, points: 120, date: "2026-08-08 09:30", status: "pending", officer: "Belum Ditugaskan", phone: "0813-5555-1234" }
+            { id: "PKP-1001", residentName: "Ahmad Fauzi", residentEmail: "ahmad@demo.com", address: "Jl. Lambung Mangkurat No. 12, Banjarmasin Tengah", type: "Minyak Jelantah", weight: 3.0, points: 60, date: "2026-08-15 10:45", status: "in_transit", officer: "Bambang S. (Ecopilah)", phone: "0812-3456-7890" },
+            { id: "PKP-2001", residentName: "Siti Aminah", residentEmail: "siti@demo.com", address: "Jl. Kelayan B No. 88, Banjarmasin Selatan", type: "Anorganik", weight: 6.5, points: 325, date: "2026-08-15 11:00", status: "pending", officer: "Belum Ditugaskan", phone: "0852-9876-5432" },
+            { id: "PKP-3001", residentName: "Budi Santoso", residentEmail: "budi@demo.com", address: "Jl. Sultan Adam No. 24, Banjarmasin Timur", type: "Organik", weight: 12.0, points: 360, date: "2026-08-15 09:30", status: "pending", officer: "Belum Ditugaskan", phone: "0813-5555-1234" }
           ]);
         }
 
@@ -3016,22 +3029,12 @@
               return;
             }
 
-            // Strict Password Check
-            const expectedPassword = user.password || (email === "ahmad@demo.com" ? "password123" : null);
+            // Strict Password Check against Database
+            const storedPassword = user.password || (email === "ahmad@demo.com" ? "password123" : null);
 
-            if (expectedPassword) {
-              if (password !== expectedPassword) {
-                showToast("Password atau email salah!", "error");
-                return;
-              }
-            } else {
-              // If legacy account created without password
-              if (password !== "password123") {
-                showToast("Password atau email salah!", "error");
-                return;
-              }
-              user.password = password;
-              saveUserToDB(user);
+            if (!storedPassword || storedPassword !== password) {
+              showToast("Password atau email salah!", "error");
+              return;
             }
           }
 
@@ -3629,6 +3632,29 @@
         if (ptsEl) ptsEl.innerText = pts.toLocaleString("id-ID");
       }
 
+      // Regional Auto-increment PKP Generator for Banjarmasin
+      function generateRegionalPKPID(districtCode) {
+        const code = String(districtCode || "1");
+        const prefix = `PKP-${code}`;
+        const pickups = getGlobalPickups();
+        
+        let maxSeq = 0;
+        pickups.forEach(p => {
+          if (p.id && p.id.startsWith(prefix)) {
+            // Extract the digits following "PKP-X"
+            const numPart = parseInt(p.id.replace(prefix, ""), 10);
+            if (!isNaN(numPart) && numPart > maxSeq) {
+              maxSeq = numPart;
+            }
+          }
+        });
+
+        const nextSeq = maxSeq + 1;
+        // Pad with 3 digits, e.g. PKP-1001, PKP-1002, PKP-2001
+        const padded = String(nextSeq).padStart(3, "0");
+        return `${prefix}${padded}`;
+      }
+
       function submitSetoran() {
         if (!selectedWasteType) {
           showToast("Pilih jenis sampah terlebih dahulu!", "error");
@@ -3637,6 +3663,9 @@
 
         const address = document.getElementById("pickup-address") ? document.getElementById("pickup-address").value.trim() : "";
         const phone = document.getElementById("pickup-phone") ? document.getElementById("pickup-phone").value.trim() : "";
+        const districtEl = document.getElementById("pickup-district");
+        const districtCode = districtEl ? districtEl.value : "3";
+        const districtName = districtEl ? districtEl.options[districtEl.selectedIndex].text.split(" (")[0] : "Banjarmasin Timur";
 
         if (!address) {
           showToast("Mohon masukkan alamat penjemputan!", "error");
@@ -3654,6 +3683,7 @@
         if (currentUser) {
           currentUser.address = address;
           currentUser.phone = phone;
+          currentUser.districtCode = districtCode;
           saveUserToDB(currentUser);
         }
 
@@ -3662,9 +3692,12 @@
         if (selectedWasteType === 'jelanta' || selectedWasteType === 'Jelantah') typeName = 'Minyak Jelantah';
 
         const globalPickups = getGlobalPickups();
+        const generatedPKP = generateRegionalPKPID(districtCode);
 
         const newPickup = {
-          id: "PKP-" + Math.floor(1000 + Math.random() * 9000),
+          id: generatedPKP,
+          districtCode: districtCode,
+          districtName: districtName,
           residentName: currentUser ? currentUser.name : "Ahmad Fauzi",
           residentEmail: currentUser ? currentUser.email : "ahmad@demo.com",
           address: address,
@@ -3681,7 +3714,7 @@
         saveGlobalPickups(globalPickups);
         syncPickupsToCloud(newPickup);
 
-        showToast(`🚚 Tiket ${newPickup.id} berhasil dibuat! Kurir akan menjemput ke alamat Anda.`);
+        showToast(`🚚 Tiket ${newPickup.id} (${districtName}) berhasil dibuat! Kurir akan menjemput ke alamat Anda.`);
         navigateTo("dashboard");
       }
 
