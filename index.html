@@ -2351,11 +2351,11 @@
               Kecamatan / Wilayah Penjemputan <span style="color: var(--red-500)">*</span>
             </label>
             <select id="pickup-district" class="form-control" style="font-size: 0.85rem;" required>
-              <option value="1">Banjarmasin Tengah (Format: PKP-1---)</option>
-              <option value="2">Banjarmasin Selatan (Format: PKP-2---)</option>
-              <option value="3" selected>Banjarmasin Timur (Format: PKP-3---)</option>
-              <option value="4">Banjarmasin Barat (Format: PKP-4---)</option>
-              <option value="5">Banjarmasin Utara (Format: PKP-5---)</option>
+              <option value="1">Banjarmasin Tengah</option>
+              <option value="2">Banjarmasin Selatan</option>
+              <option value="3" selected>Banjarmasin Timur</option>
+              <option value="4">Banjarmasin Barat</option>
+              <option value="5">Banjarmasin Utara</option>
             </select>
           </div>
 
@@ -3681,7 +3681,7 @@
         const phone = document.getElementById("pickup-phone") ? document.getElementById("pickup-phone").value.trim() : "";
         const districtEl = document.getElementById("pickup-district");
         const districtCode = districtEl ? districtEl.value : "3";
-        const districtName = districtEl ? districtEl.options[districtEl.selectedIndex].text.split(" (")[0] : "Banjarmasin Timur";
+        const districtName = districtEl ? districtEl.options[districtEl.selectedIndex].text.trim() : "Banjarmasin Timur";
 
         if (!address) {
           showToast("Mohon masukkan alamat penjemputan!", "error");
