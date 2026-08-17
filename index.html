@@ -3551,56 +3551,75 @@
             pickup.notes = customNotes;
           }
 
-          // Award points to resident in Cloud and DB
-          const resEmail = pickup.residentEmail || (pickup.residentName ? `${pickup.residentName.toLowerCase()}@gmail.com` : "ahmad@demo.com");
-          const resDocId = resEmail.toLowerCase().replace(/[^a-zA-Z0-9]/g, "_");
-          const historyDesc = customNotes 
-            ? `Setoran ${pickup.type} (${pickup.weight}kg) — Catatan: "${customNotes}"`
-            : `Setoran ${pickup.type} (${pickup.weight}kg) — Verified Aktual`;
+          // Guard against awarding points twice for the same verification
+          if (!pickup.isRewarded) {
+            pickup.isRewarded = true;
 
-          // Sync points directly to Firestore
-          if (firestoreDB) {
-            firestoreDB.collection("users").doc(resDocId).get().then(doc => {
-              if (doc.exists) {
-                const data = doc.data();
-                const newPts = (data.points || 0) + pickup.points;
-                const hist = data.history || [];
-                hist.unshift({
-                  date: new Date().toISOString().split("T")[0],
-                  desc: historyDesc,
-                  points: pickup.points
-                });
-                firestoreDB.collection("users").doc(resDocId).set({ points: newPts, history: hist }, { merge: true });
-              }
-            }).catch(e => console.warn("Cloud point award error:", e));
-          }
+            const resEmail = pickup.residentEmail || (pickup.residentName ? `${pickup.residentName.toLowerCase()}@gmail.com` : "ahmad@demo.com");
+            const resDocId = resEmail.toLowerCase().replace(/[^a-zA-Z0-9]/g, "_");
+            const historyDesc = customNotes 
+              ? `Setoran ${pickup.type} (${pickup.weight}kg) — Catatan: "${customNotes}"`
+              : `Setoran ${pickup.type} (${pickup.weight}kg) — Verified Aktual`;
 
-          const db = getUsersDB();
-          const resUser = db.find(u => u.name.toLowerCase() === pickup.residentName.toLowerCase() || (u.email && u.email.toLowerCase() === resEmail.toLowerCase()));
-          if (resUser) {
-            resUser.points = (resUser.points || 0) + pickup.points;
-            resUser.history = resUser.history || [];
-            resUser.history.unshift({
+            const historyItem = {
               date: new Date().toISOString().split("T")[0],
               desc: historyDesc,
-              points: pickup.points
-            });
-            saveUserToDB(resUser);
-            if (currentUser && (currentUser.email === resUser.email || currentUser.name.toLowerCase() === resUser.name.toLowerCase())) {
-              currentUser = resUser;
-              localStorage.setItem("ECOPILAH_session", JSON.stringify(currentUser));
-              sessionStorage.setItem("ECOPILAH_session", JSON.stringify(currentUser));
+              points: pickup.points,
+              pickupId: pickup.id
+            };
+
+            // Single unified update
+            const db = getUsersDB();
+            let resUser = db.find(u => (u.email && u.email.toLowerCase() === resEmail.toLowerCase()) || u.name.toLowerCase() === pickup.residentName.toLowerCase());
+
+            if (firestoreDB) {
+              firestoreDB.collection("users").doc(resDocId).get().then(doc => {
+                let uData = doc.exists ? doc.data() : (resUser || { name: pickup.residentName, email: resEmail, role: "warga", points: 0, history: [] });
+                uData.points = (uData.points || 0) + pickup.points;
+                uData.history = uData.history || [];
+                uData.history.unshift(historyItem);
+                
+                // Save to Firestore and Local DB atomically
+                firestoreDB.collection("users").doc(resDocId).set({ points: uData.points, history: uData.history }, { merge: true });
+                
+                if (resUser) {
+                  resUser.points = uData.points;
+                  resUser.history = uData.history;
+                  const idx = db.findIndex(u => u.email.toLowerCase() === resEmail.toLowerCase());
+                  if (idx !== -1) db[idx] = resUser;
+                  localStorage.setItem("ECOPILAH_users_db", JSON.stringify(db));
+                }
+
+                if (currentUser && (currentUser.email.toLowerCase() === resEmail.toLowerCase() || currentUser.name.toLowerCase() === pickup.residentName.toLowerCase())) {
+                  currentUser.points = uData.points;
+                  currentUser.history = uData.history;
+                  localStorage.setItem("ECOPILAH_session", JSON.stringify(currentUser));
+                  sessionStorage.setItem("ECOPILAH_session", JSON.stringify(currentUser));
+                  updateDashboardUI();
+                }
+              }).catch(e => console.warn("Cloud point award error:", e));
+            } else if (resUser) {
+              resUser.points = (resUser.points || 0) + pickup.points;
+              resUser.history = resUser.history || [];
+              resUser.history.unshift(historyItem);
+              saveUserToDB(resUser);
+              if (currentUser && (currentUser.email === resUser.email || currentUser.name.toLowerCase() === resUser.name.toLowerCase())) {
+                currentUser = resUser;
+                localStorage.setItem("ECOPILAH_session", JSON.stringify(currentUser));
+                sessionStorage.setItem("ECOPILAH_session", JSON.stringify(currentUser));
+                updateDashboardUI();
+              }
             }
-          }
 
-          // Update Leaderboard
-          const lbIdx = MOCK_LEADERBOARD.findIndex(u => u.name === pickup.residentName);
-          if (lbIdx !== -1) {
-            MOCK_LEADERBOARD[lbIdx].points += pickup.points;
-          }
-          renderLeaderboard();
+            // Update Leaderboard
+            const lbIdx = MOCK_LEADERBOARD.findIndex(u => u.name.toLowerCase() === pickup.residentName.toLowerCase());
+            if (lbIdx !== -1) {
+              MOCK_LEADERBOARD[lbIdx].points += pickup.points;
+            }
+            renderLeaderboard();
 
-          showToast(`🎉 Verified! Berat aktual ${pickup.weight}kg (+${pickup.points} Poin) telah dikonfirmasi untuk ${pickup.residentName}.`, 'success');
+            showToast(`🎉 Verified! Berat aktual ${pickup.weight}kg (+${pickup.points} Poin) telah dikonfirmasi untuk ${pickup.residentName}.`, 'success');
+          }
         }
 
         saveGlobalPickups(pickups);
